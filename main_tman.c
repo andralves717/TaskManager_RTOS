@@ -47,6 +47,43 @@
 
 QueueHandle_t xQueue1, xQueue2;
 
+/*-----------------------------------------------------------*/
+
+/*
+ * Initialization of the framework.
+ */
+void TMAN_Init( int tick_ms);
+
+/*
+ * Terminate the framework.
+ */
+void TMAN_Close( void );
+
+/*
+ * Add a task to the framework
+ */
+void TMAN_TaskAdd( void );
+
+/*
+ * Register attributes (period, phase, deadline, precedence constraints)
+ * for a task already added to the framework
+ */
+void TMAN_TaskRegisterAttributes( char taskName[], int period, int phase, int deadline  );
+
+/*
+ * Called by a task to signal the termination of an instance and 
+ * wait for next activation
+ */
+void TMAN_TaskWaitPeriod( void );
+
+/*
+ * Returns statistical information about a task.
+ * Provided information must include at least the number of activations,
+ * but additional info (number of deadline misses) will be valued.
+ */
+void TMAN_TaskStats( void );
+
+/*-----------------------------------------------------------*/
 
 /*
  * Prototypes and tasks
@@ -74,42 +111,16 @@ void pvDataAcq( void ) {
     }
 }
 
-void pvDataProc( void ) {
-    int voltage, average;
-    int lastFive[LAST_FIVE_ARRAY_LENGTH] = {0, 0, 0, 0, 0};
-    int index = 0;
+void taskBody( void ) {
+    TickType_t xLastWakeTime = xTaskGetTickCount();
 
     for (;;) {
-        if (xQueueReceive(xQueue1, voltage, DATA_ACQ_PERIOD_MS) == pdPASS) {
-            // Save value in array
-            lastFive[index] = voltage;
-            index++;
-            if (index == LAST_FIVE_ARRAY_LENGTH) {
-                index = 0;
-            }
-        }
+        // Wait for the next cycle.
+        TMAN_TaskWaitPeriod(xLastWakeTime)
 
-        // Calculate average   
-        average = 0;
-        for (int i = 0; i < LAST_FIVE_ARRAY_LENGTH; i++) {
-            average = average + lastFive[index];
-        }
-        average = (int) average / LAST_FIVE_ARRAY_LENGTH;
-
-        xQueueSend(xQueue2, average, DATA_ACQ_PERIOD_MS);
         
     }
 }
-
-void pvDataOut(void) {
-    int average;
-    for (;;) {
-        if (xQueueReceive(xQueue1, average, DATA_ACQ_PERIOD_MS) == pdPASS) {
-            printf("Average: %d Celsius\n\r", average);
-        }
-    }
-}
-
 
 /*
  * Create the demo tasks then start the scheduler.
@@ -153,8 +164,6 @@ int main_tman( void ) {
 
     /* Create the tasks defined within this file. */
     xTaskCreate(pvDataAcq, (const signed char * const) "Acq", configMINIMAL_STACK_SIZE, NULL, ACQ_PRIORITY, NULL);
-    xTaskCreate(pvDataProc, (const signed char * const) "Proc", configMINIMAL_STACK_SIZE, NULL, PROC_PRIORITY, NULL);
-    xTaskCreate(pvDataOut, (const signed char * const) "Out", configMINIMAL_STACK_SIZE, NULL, OUT_PRIORITY, NULL);
 
     /* Finally start the scheduler. */
     vTaskStartScheduler();
