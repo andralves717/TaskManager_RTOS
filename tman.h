@@ -25,10 +25,21 @@
 #define TMAN_SUCCESS 0
 #define TMAN_FAIL -1
 
+struct task_tman {
+    char NAME[];
+    int PERIOD;
+    int PHASE;
+    int DEADLINE;
+    int PRECEDENCE_CONSTRAINTS;
+};
+
+static List_t * tman_task_list;
+
+
 // Define prototypes (public interface)
 int TMAN_Init(int tick_ms);
 int TMAN_Close();
-int TMAN_TaskAdd();
+int TMAN_TaskAdd(char taskName[]);
 int TMAN_TaskRegisterAttributes(char taskName[], int period, int phase, int deadline);
 int TMAN_TaskWaitPeriod();
 int TMAN_TaskStats();

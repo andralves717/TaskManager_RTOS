@@ -25,6 +25,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "list.h"
 
 
 /* App includes */
@@ -37,7 +38,7 @@
  * Precondition: 
  * Input: 		 tick_ms
  * Returns:      TMAN_SUCCESS if Ok.
- *               UARTX_FAIL error code in case of failure (see tman.h)
+ *               TMAN_FAIL error code in case of failure (see tman.h)
  * Side Effects:	 
  * Overview:     Initializes Task Manager Framework.
  *		
@@ -45,8 +46,16 @@
  * 
  ********************************************************************/
 
-int TMAN_Init(int tick_ms) {
+static List_t * tman_task_list;
 
+int TMAN_Init(int tick_ms) {
+    
+    
+    tman_task_list = (List_t *) pvPortMalloc(sizeof( List_t ));
+    vListInitialise(tman_task_list);
+    
+    return TMAN_SUCCESS;
+    
 }
 
 /********************************************************************
@@ -63,7 +72,19 @@ int TMAN_Init(int tick_ms) {
  ********************************************************************/
 
 int TMAN_Close(){
+
+    xLIST_ITEM * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
     
+    while(pvTmanTaskListIdx != NULL){
+        vPortFree(&pvTmanTaskListIdx.pvOwner);
+        pvTmanTaskListIdx = pvTmanTaskListIdx.pxNext;
+        vPortFree(&pvTmanTaskListIdx.pxPrevious);
+    }
+    vPortFree(&pvTmanTaskListIdx);
+    vPortFree(&tman_task_list);
+    
+    
+    return TMAN_SUCCESS;
 }
 
 /********************************************************************
@@ -79,7 +100,28 @@ int TMAN_Close(){
  * 
  ********************************************************************/
 
-int TMAN_TaskAdd(){
+int TMAN_TaskAdd(char taskName[]){
+    
+    xLIST_ITEM * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
+    
+    if (tman_task_list->uxNumberOfItems > 0){
+        while(pvTmanTaskListIdx != NULL){
+            task_tman pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
+            if(pvItemTmp.NAME == taskName){
+                return TMAN_FAIL;
+            }
+        }
+    }
+    
+    ListItem_t * pxItem = (ListItem_t *) pvPortMalloc(sizeof ( ListItem_t ));
+    task_tman * pvTaskTmanTmp = (task_tman *) pvPortMalloc(sizeof (task_tman));
+    pvTaskTmanTmp->NAME = taskName;
+    pxItem->pvOwner = pvTaskTmanTmp;
+    vListInitialiseItem(pxItem);
+    vListInsertEnd(tman_task_list, pxItem);
+    
+    return TMAN_SUCCESS;
+    
 }
 
 /********************************************************************
@@ -98,6 +140,7 @@ int TMAN_TaskAdd(){
  ********************************************************************/
 
 int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
+    
 }
 
 /********************************************************************
