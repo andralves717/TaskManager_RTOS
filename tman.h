@@ -26,10 +26,10 @@
 #define TMAN_FAIL -1
 
 // Define prototypes (public interface)
-int TMAN_Init();
+int TMAN_Init(int tick_ms);
 int TMAN_Close();
 int TMAN_TaskAdd();
-int TMAN_TaskRegisterAttributes();
+int TMAN_TaskRegisterAttributes(char taskName[], int period, int phase, int deadline);
 int TMAN_TaskWaitPeriod();
 int TMAN_TaskStats();
 

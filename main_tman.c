@@ -47,43 +47,6 @@
 
 QueueHandle_t xQueue1, xQueue2;
 
-/*-----------------------------------------------------------*/
-
-/*
- * Initialization of the framework.
- */
-void TMAN_Init( int tick_ms);
-
-/*
- * Terminate the framework.
- */
-void TMAN_Close( void );
-
-/*
- * Add a task to the framework
- */
-void TMAN_TaskAdd( void );
-
-/*
- * Register attributes (period, phase, deadline, precedence constraints)
- * for a task already added to the framework
- */
-void TMAN_TaskRegisterAttributes( char taskName[], int period, int phase, int deadline  );
-
-/*
- * Called by a task to signal the termination of an instance and 
- * wait for next activation
- */
-void TMAN_TaskWaitPeriod( void );
-
-/*
- * Returns statistical information about a task.
- * Provided information must include at least the number of activations,
- * but additional info (number of deadline misses) will be valued.
- */
-void TMAN_TaskStats( void );
-
-/*-----------------------------------------------------------*/
 
 /*
  * Prototypes and tasks
@@ -116,7 +79,7 @@ void taskBody( void ) {
 
     for (;;) {
         // Wait for the next cycle.
-        TMAN_TaskWaitPeriod(xLastWakeTime)
+        TMAN_TaskWaitPeriod(xLastWakeTime);
 
         
     }
