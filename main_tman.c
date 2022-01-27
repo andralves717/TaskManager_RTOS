@@ -1,5 +1,5 @@
 /*
- * Paulo Pedreiras, Sept/2021
+ * <> e <>, Jan/2022
  *
  * FREERTOS demo for ChipKit MAX32 board
  * - Creates two periodic tasks
@@ -67,7 +67,7 @@ void pvDataAcq( void ) {
         while (IFS1bits.AD1IF == 0); // Wait fo EOC
 
         // Convert to 0..3.3V 
-        voltage = (int) (ADC1BUF0 * 100) / 1023;
+        voltage = (int) (ADC1BUF0 *  100) / 1023;
 
         xQueueSend(xQueue1, voltage, DATA_ACQ_PERIOD_MS);
         
