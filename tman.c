@@ -63,7 +63,7 @@ int TMAN_Init(int tick_ms) {
  * Precondition: 
  * Input: 		
  * Returns:      TMAN_SUCCESS if Ok.
- *               UARTX_FAIL error code in case of failure (see tman.h)
+ *               TMAN_FAIL error code in case of failure (see tman.h)
  * Side Effects:	 
  * Overview:     Terminates Task Manager Framework.
  *		
@@ -73,12 +73,12 @@ int TMAN_Init(int tick_ms) {
 
 int TMAN_Close(){
 
-    xLIST_ITEM * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
+    ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
     
     while(pvTmanTaskListIdx != NULL){
-        vPortFree(&pvTmanTaskListIdx.pvOwner);
-        pvTmanTaskListIdx = pvTmanTaskListIdx.pxNext;
-        vPortFree(&pvTmanTaskListIdx.pxPrevious);
+        vPortFree(&pvTmanTaskListIdx->pvOwner);
+        pvTmanTaskListIdx = pvTmanTaskListIdx->pxNext;
+        vPortFree(&pvTmanTaskListIdx->pxPrevious);
     }
     vPortFree(&pvTmanTaskListIdx);
     vPortFree(&tman_task_list);
@@ -92,7 +92,7 @@ int TMAN_Close(){
  * Precondition: 
  * Input: 		
  * Returns:      TMAN_SUCCESS if Ok.
- *               UARTX_FAIL error code in case of failure (see tman.h)
+ *               TMAN_FAIL error code in case of failure (see tman.h)
  * Side Effects:	 
  * Overview:     Add a task to the framework.
  *		
@@ -102,12 +102,12 @@ int TMAN_Close(){
 
 int TMAN_TaskAdd(char taskName[]){
     
-    xLIST_ITEM * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
+    ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
     
     if (tman_task_list->uxNumberOfItems > 0){
         while(pvTmanTaskListIdx != NULL){
-            task_tman pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
-            if(pvItemTmp.NAME == taskName){
+            task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
+            if(strcmp(pvItemTmp->NAME, taskName) == 0){
                 return TMAN_FAIL;
             }
         }
@@ -115,7 +115,7 @@ int TMAN_TaskAdd(char taskName[]){
     
     ListItem_t * pxItem = (ListItem_t *) pvPortMalloc(sizeof ( ListItem_t ));
     task_tman * pvTaskTmanTmp = (task_tman *) pvPortMalloc(sizeof (task_tman));
-    pvTaskTmanTmp->NAME = taskName;
+    strcpy(pvTaskTmanTmp->NAME, taskName);
     pxItem->pvOwner = pvTaskTmanTmp;
     vListInitialiseItem(pxItem);
     vListInsertEnd(tman_task_list, pxItem);
@@ -128,8 +128,10 @@ int TMAN_TaskAdd(char taskName[]){
  * Function: 	TMAN_TaskRegisterAttributes()
  * Precondition: 
  * Input: 		 taskName, attribute, value of the attribute
+ * Attributes:   PERIOD, PHASE, DEADLINE, PRECEDENCE CONSTRAINTS
+ * 
  * Returns:      TMAN_SUCCESS if Ok.
- *               UARTX_FAIL error code in case of failure (see tman.h)
+ *               TMAN_FAIL error code in case of failure (see tman.h)
  * Side Effects:	 
  * Overview:     Register attributes (period, phase, deadline, 
  *               precedence constraints) for a task already added to 
@@ -141,14 +143,38 @@ int TMAN_TaskAdd(char taskName[]){
 
 int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
     
+    ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
+
+    if (tman_task_list->uxNumberOfItems > 0) {
+        while (pvTmanTaskListIdx != NULL) {
+            task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
+            if (strcmp(pvItemTmp->NAME, taskName) == 0 ) {
+                if( strcmp(attribute, "PERIOD") == 0 ){
+                    pvItemTmp->PERIOD = value;
+                } else if (strcmp(attribute, "PHASE") == 0 ) {
+                    pvItemTmp->PHASE = value;
+                } else if (strcmp(attribute, "DEADLINE") == 0 ) {
+                    pvItemTmp->DEADLINE = value;
+                } else if (strcmp(attribute, "PRECEDENCE CONSTRAINTS") == 0 ) {
+                    pvItemTmp->PRECEDENCE_CONSTRAINTS = value;
+                } else {
+                    return TMAN_FAIL;
+                }
+                return TMAN_SUCCESS;
+            }
+        }
+    }
+    return TMAN_FAIL;
+    
+    
 }
 
 /********************************************************************
  * Function: 	TMAN_TaskWaitPeriod()
  * Precondition: 
- * Input: 		
+ * Input: 		 tick_ms
  * Returns:      TMAN_SUCCESS if Ok.
- *               UARTX_FAIL error code in case of failure (see tman.h)
+ *               TMAN_FAIL error code in case of failure (see tman.h)
  * Side Effects:	 
  * Overview:     Called by a task to signal the termination of an 
  *               instance and wait for the next activation.
@@ -158,7 +184,7 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
  * 
  ********************************************************************/
 
-int TMAN_TaskWaitPeriod(){
+int TMAN_TaskWaitPeriod(int tick_ms){
 }
 
 /********************************************************************

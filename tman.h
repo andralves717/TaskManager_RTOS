@@ -25,13 +25,13 @@
 #define TMAN_SUCCESS 0
 #define TMAN_FAIL -1
 
-struct task_tman {
-    char NAME[];
+typedef struct task_tman {
+    char NAME[16];
     int PERIOD;
     int PHASE;
     int DEADLINE;
     int PRECEDENCE_CONSTRAINTS;
-};
+} task_tman;
 
 static List_t * tman_task_list;
 
@@ -40,8 +40,8 @@ static List_t * tman_task_list;
 int TMAN_Init(int tick_ms);
 int TMAN_Close();
 int TMAN_TaskAdd(char taskName[]);
-int TMAN_TaskRegisterAttributes(char taskName[], int period, int phase, int deadline);
-int TMAN_TaskWaitPeriod();
+int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value);
+int TMAN_TaskWaitPeriod(int tick_ms);
 int TMAN_TaskStats();
 
 #endif	/* TMAN_H */
