@@ -32,10 +32,9 @@
 #include "../UART/uart.h"
 #include "tman.h"
 
-#define PRIORITY (tskIDLE_PRIORITY + 50)
-
 
 static List_t * tman_task_list;
+static TickType_t tman_ticks = 0;
 
 static int tman_period;
 
@@ -43,11 +42,20 @@ void pvTMAN_Task(void *pvParam) {
     TickType_t xLastWakeTime = xTaskGetTickCount();
     const TickType_t xFrequency = tman_period;
 
-    printf("pvTMAN_Task pre for");
-
     for (;;) {
         // Wait for the next cycle.
-        printf("FAZ MERDAS");
+        //tman_ticks++;
+        printf("[TMAN] tick %d\n", ++tman_ticks);
+        
+        ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
+
+        if (tman_task_list->uxNumberOfItems > 0) {
+            while (pvTmanTaskListIdx != NULL) {
+                task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
+                
+            }
+        }
+        
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
 
 
@@ -74,15 +82,10 @@ int TMAN_Init(int tick_ms) {
     tman_task_list = (List_t *) pvPortMalloc(sizeof( List_t ));
     vListInitialise(tman_task_list);
     
-    printf("TMAN TASK LIST Iniciado\n");
-    
     tman_period = tick_ms;
     xTaskCreate(pvTMAN_Task, (const signed char * const) "TMAN", 
                 configMINIMAL_STACK_SIZE, NULL, PRIORITY, NULL);
     
-    
-    printf("Task Manager Iniciado :)\n");
-//    vTaskStartScheduler();
     return TMAN_SUCCESS;
     
 }
@@ -129,7 +132,7 @@ int TMAN_Close(){
  * 
  ********************************************************************/
 
-int TMAN_TaskAdd(char taskName[]){
+int TMAN_TaskAdd(char taskName[], uint32_t priority){
     
     ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
     
@@ -147,7 +150,8 @@ int TMAN_TaskAdd(char taskName[]){
     strcpy(pvTaskTmanTmp->NAME, taskName);
     pxItem->pvOwner = pvTaskTmanTmp;
     vListInitialiseItem(pxItem);
-    vListInsertEnd(tman_task_list, pxItem);
+    pvTmanTaskListIdx->xItemValue = priority;
+    vListInsert(tman_task_list, pxItem);
     
     printf("Task <%s> adicionada.\n", taskName);
     
@@ -215,7 +219,9 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
  * 
  ********************************************************************/
 
-int TMAN_TaskWaitPeriod(int tick_ms){
+int TMAN_TaskWaitPeriod(){
+    
+    vTaskSuspend(NULL);
 }
 
 /********************************************************************

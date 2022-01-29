@@ -32,7 +32,7 @@
 // Define return codes
 #define TMAN_SUCCESS 0
 #define TMAN_FAIL -1
-#define PRIORITY (tskIDLE_PRIORITY + 50)
+#define PRIORITY (tskIDLE_PRIORITY + 31)
 
 typedef struct task_tman {
     char NAME[16];
@@ -40,6 +40,7 @@ typedef struct task_tman {
     int PHASE;
     int DEADLINE;
     int PRECEDENCE_CONSTRAINTS;
+    TickType_t LAST_ACTIVATION;
 } task_tman;
 
 static List_t * tman_task_list;

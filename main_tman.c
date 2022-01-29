@@ -38,6 +38,7 @@
 
 /* Set the tasks' period (in system ticks) */
 #define PERIOD_MS           ( 1 / portTICK_RATE_MS ) // 
+#define PERIOD_500MS           ( 500 / portTICK_RATE_MS ) // 
 #define PERIOD_1000MS           ( 1000 / portTICK_RATE_MS ) // 
 
 /* Priorities of the demo application tasks (high numb. -> high prio.) */
@@ -73,29 +74,16 @@
 //}
 
 void taskBody( void * pvParameters ) {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-    const TickType_t xFrequency = PERIOD_1000MS;
-    
     for (;;) {
         // Wait for the next cycle.
-//        TMAN_TaskWaitPeriod(xLastWakeTime);
-        vTaskDelayUntil(&xLastWakeTime, xFrequency);
-        printf("eu sou uma task muito bonita\n");
+        TMAN_TaskWaitPeriod((char *) pvParameters);
+        int tcks = xTaskGetTickCount();
+        printf("[%s] Tick: %d \n", ((char *) pvParameters), tcks);
+        int i, j;
+        for (i = 0; i < 32; i++)
+            for (j = 0; j < 32; j++)
+                printf("\n");
         
-    }
-}
-
-void taskBody2(void * pvParameters ) {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-    const TickType_t xFrequency = PERIOD_1000MS;
-
-
-    for (;;) {
-        // Wait for the next cycle.
-//        TMAN_TaskWaitPeriod(xLastWakeTime);
-        vTaskDelayUntil(&xLastWakeTime, xFrequency);
-        printf("eu sou uma task muito inutil\n");
-
     }
 }
 
@@ -119,30 +107,32 @@ int main_tman( void ) {
     // Welcome message
     
     printf("\n\n *********************************************\n\r");
-    printf("Teste Número 10\n");
+    printf("Teste Número 12\n");
     /* Create the tasks defined within this file. */
-    xTaskCreate(taskBody , (const signed char * const) "Task A", 
-                configMINIMAL_STACK_SIZE, NULL, PRIORITY_1, NULL);
-    xTaskCreate(taskBody2, (const signed char * const) "Task B", 
-                configMINIMAL_STACK_SIZE, NULL, PRIORITY_2, NULL);
+    xTaskCreate(taskBody, (const signed char * const) "Task A", 
+                configMINIMAL_STACK_SIZE, (void *) "Task A", PRIORITY_1, NULL);
+    xTaskCreate(taskBody, (const signed char * const) "Task B", 
+                configMINIMAL_STACK_SIZE, (void *) "Task B", PRIORITY_2, NULL);
     
     printf("task create 1 e 2\n");
     
-    
+    TMAN_Init(PERIOD_500MS);
+
 
     
-    TMAN_Init(PERIOD_MS);
-
-    printf("TEste");
+    TMAN_TaskAdd("Task A", PRIORITY_1);
+    TMAN_TaskAdd("Task B", PRIORITY_2);
     
-    vTaskStartScheduler();
-
+    TMAN_TaskRegisterAttributes("Task A", "PERIOD", 5);
+    TMAN_TaskRegisterAttributes("Task B", "PERIOD", 7);
+    TMAN_TaskRegisterAttributes("Task A", "PHASE", 0);
+    TMAN_TaskRegisterAttributes("Task B", "PHASE", 0);
+    TMAN_TaskRegisterAttributes("Task A", "DEADLINE", 5);
+    TMAN_TaskRegisterAttributes("Task B", "DEADLINE", 7);
     
-    TMAN_TaskAdd("Task A");
-    TMAN_TaskAdd("Task B");
 
     /* Finally start the scheduler. */
-    
+    vTaskStartScheduler();
 
     /* Will only reach here if there is insufficient heap available to start
     the scheduler. */
