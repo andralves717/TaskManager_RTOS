@@ -26,6 +26,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "tman.h"
 
 
 /* App includes */
@@ -36,62 +37,72 @@
 #define PBCLOCK 40000000L // Peripheral Bus Clock frequency, in Hz
 
 /* Set the tasks' period (in system ticks) */
-#define DATA_ACQ_PERIOD_MS 	( 100 / portTICK_RATE_MS ) // 
+#define PERIOD_MS           ( 1 / portTICK_RATE_MS ) // 
+#define PERIOD_1000MS           ( 1000 / portTICK_RATE_MS ) // 
 
 /* Priorities of the demo application tasks (high numb. -> high prio.) */
-#define ACQ_PRIORITY        ( tskIDLE_PRIORITY + 3 )
-#define PROC_PRIORITY	    ( tskIDLE_PRIORITY + 2 )
-#define OUT_PRIORITY	    ( tskIDLE_PRIORITY + 1 )
+#define PRIORITY_1        ( tskIDLE_PRIORITY + 1 )
+#define PRIORITY_2        ( tskIDLE_PRIORITY + 2 )
 
-#define LAST_FIVE_ARRAY_LENGTH 5
+//
+//
+///*
+// * Prototypes and tasks
+// */
+//
+//void pvDataAcq( void ) {
+//    int voltage;
+//    TickType_t xLastWakeTime = xTaskGetTickCount();
+//    const TickType_t xFrequency = DATA_ACQ_PERIOD_MS;
+//
+//    for (;;) {
+//        // Wait for the next cycle.
+//        vTaskDelayUntil(&xLastWakeTime, xFrequency);
+//
+//        // Get one sample
+//        IFS1bits.AD1IF = 0; // Reset interrupt flag
+//        AD1CON1bits.ASAM = 1; // Start conversion
+//        while (IFS1bits.AD1IF == 0); // Wait fo EOC
+//
+//        // Convert to 0..3.3V 
+//        voltage = (int) (ADC1BUF0 *  100) / 1023;
+//
+//        xQueueSend(xQueue1, voltage, DATA_ACQ_PERIOD_MS);
+//        
+//    }
+//}
 
-QueueHandle_t xQueue1, xQueue2;
-
-
-/*
- * Prototypes and tasks
- */
-
-void pvDataAcq( void ) {
-    int voltage;
+void taskBody( void * pvParameters ) {
     TickType_t xLastWakeTime = xTaskGetTickCount();
-    const TickType_t xFrequency = DATA_ACQ_PERIOD_MS;
-
+    const TickType_t xFrequency = PERIOD_1000MS;
+    
     for (;;) {
         // Wait for the next cycle.
+//        TMAN_TaskWaitPeriod(xLastWakeTime);
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
-
-        // Get one sample
-        IFS1bits.AD1IF = 0; // Reset interrupt flag
-        AD1CON1bits.ASAM = 1; // Start conversion
-        while (IFS1bits.AD1IF == 0); // Wait fo EOC
-
-        // Convert to 0..3.3V 
-        voltage = (int) (ADC1BUF0 *  100) / 1023;
-
-        xQueueSend(xQueue1, voltage, DATA_ACQ_PERIOD_MS);
+        printf("eu sou uma task muito bonita\n");
         
     }
 }
 
-void taskBody( void ) {
+void taskBody2(void * pvParameters ) {
     TickType_t xLastWakeTime = xTaskGetTickCount();
+    const TickType_t xFrequency = PERIOD_1000MS;
+
 
     for (;;) {
         // Wait for the next cycle.
-        TMAN_TaskWaitPeriod(xLastWakeTime);
+//        TMAN_TaskWaitPeriod(xLastWakeTime);
+        vTaskDelayUntil(&xLastWakeTime, xFrequency);
+        printf("eu sou uma task muito inutil\n");
 
-        
     }
 }
 
-/*
- * Create the demo tasks then start the scheduler.
- */
+///*
+// * Create the demo tasks then start the scheduler.
+// */
 int main_tman( void ) {
-
-    xQueue1 = xQueueCreate(5, sizeof (int));
-    xQueue2 = xQueueCreate(5, sizeof (int));
     
 	// Init UART and redirect stdin/stdot/stderr to UART
     if(UartInit(configPERIPHERAL_CLOCK_HZ, 115200) != UART_SUCCESS) {
@@ -104,32 +115,34 @@ int main_tman( void ) {
      // Disable JTAG interface as it uses a few ADC ports
     DDPCONbits.JTAGEN = 0;
 
-    // Initialize ADC module
-    // Polling mode, AN0 as input
-    // Generic part
-    AD1CON1bits.SSRC = 7; // Internal counter ends sampling and starts conversion
-    AD1CON1bits.CLRASAM = 1; //Stop conversion when 1st A/D converter interrupt is generated and clears ASAM bit automatically
-    AD1CON1bits.FORM = 0; // Integer 16 bit output format
-    AD1CON2bits.VCFG = 0; // VR+=AVdd; VR-=AVss
-    AD1CON2bits.SMPI = 0; // Number (+1) of consecutive conversions, stored in ADC1BUF0...ADCBUF{SMPI}
-    AD1CON3bits.ADRC = 1; // ADC uses internal RC clock
-    AD1CON3bits.SAMC = 16; // Sample time is 16TAD ( TAD = 100ns)
-    // Set AN0 as input
-    AD1CHSbits.CH0SA = 0; // Select AN0 as input for A/D converter
-    TRISBbits.TRISB0 = 1; // Set AN0 to input mode
-    AD1PCFGbits.PCFG0 = 0; // Set AN0 to analog mode
-    // Enable module
-    AD1CON1bits.ON = 1; // Enable A/D module (This must be the ***last instruction of configuration phase***)
 
     // Welcome message
     
     printf("\n\n *********************************************\n\r");
-
+    printf("Teste Número 10\n");
     /* Create the tasks defined within this file. */
-    xTaskCreate(pvDataAcq, (const signed char * const) "Acq", configMINIMAL_STACK_SIZE, NULL, ACQ_PRIORITY, NULL);
+    xTaskCreate(taskBody , (const signed char * const) "Task A", 
+                configMINIMAL_STACK_SIZE, NULL, PRIORITY_1, NULL);
+    xTaskCreate(taskBody2, (const signed char * const) "Task B", 
+                configMINIMAL_STACK_SIZE, NULL, PRIORITY_2, NULL);
+    
+    printf("task create 1 e 2\n");
+    
+    
+
+    
+    TMAN_Init(PERIOD_MS);
+
+    printf("TEste");
+    
+    vTaskStartScheduler();
+
+    
+    TMAN_TaskAdd("Task A");
+    TMAN_TaskAdd("Task B");
 
     /* Finally start the scheduler. */
-    vTaskStartScheduler();
+    
 
     /* Will only reach here if there is insufficient heap available to start
     the scheduler. */

@@ -20,10 +20,19 @@
 #define	TMAN_H
 
 #include <stdint.h>
+/* Kernel includes. */
+
+#include "FreeRTOS.h"
+#include "ConfigPerformance.h"
+#include "task.h"
+#include "queue.h"
+#include "list.h"
+
 
 // Define return codes
 #define TMAN_SUCCESS 0
 #define TMAN_FAIL -1
+#define PRIORITY (tskIDLE_PRIORITY + 50)
 
 typedef struct task_tman {
     char NAME[16];
@@ -35,7 +44,9 @@ typedef struct task_tman {
 
 static List_t * tman_task_list;
 
+static int tman_period;
 
+void pvTMAN_Task(void *pvParam);
 // Define prototypes (public interface)
 int TMAN_Init(int tick_ms);
 int TMAN_Close();

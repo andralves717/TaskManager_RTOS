@@ -10,7 +10,6 @@
  * 
  * Overview:
  *          Set of functions to Manage tasks for FreeRTOS
- 
  * 
  * Revisions:
  *      2022-01-27: initial release
@@ -20,19 +19,43 @@
 #include <xc.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 /* Kernel includes. */
+
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "list.h"
 
-
 /* App includes */
 #include "../UART/uart.h"
 #include "tman.h"
 
+#define PRIORITY (tskIDLE_PRIORITY + 50)
 
+
+static List_t * tman_task_list;
+
+static int tman_period;
+
+void pvTMAN_Task(void *pvParam) {
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    const TickType_t xFrequency = tman_period;
+
+    printf("pvTMAN_Task pre for");
+
+    for (;;) {
+        // Wait for the next cycle.
+        printf("FAZ MERDAS");
+        vTaskDelayUntil(&xLastWakeTime, xFrequency);
+
+
+        // TODO: Escolher task para acordar
+
+    }
+
+}
 /********************************************************************
  * Function: 	TMAN_Init()
  * Precondition: 
@@ -46,14 +69,20 @@
  * 
  ********************************************************************/
 
-static List_t * tman_task_list;
-
 int TMAN_Init(int tick_ms) {
-    
     
     tman_task_list = (List_t *) pvPortMalloc(sizeof( List_t ));
     vListInitialise(tman_task_list);
     
+    printf("TMAN TASK LIST Iniciado\n");
+    
+    tman_period = tick_ms;
+    xTaskCreate(pvTMAN_Task, (const signed char * const) "TMAN", 
+                configMINIMAL_STACK_SIZE, NULL, PRIORITY, NULL);
+    
+    
+    printf("Task Manager Iniciado :)\n");
+//    vTaskStartScheduler();
     return TMAN_SUCCESS;
     
 }
@@ -119,6 +148,8 @@ int TMAN_TaskAdd(char taskName[]){
     pxItem->pvOwner = pvTaskTmanTmp;
     vListInitialiseItem(pxItem);
     vListInsertEnd(tman_task_list, pxItem);
+    
+    printf("Task <%s> adicionada.\n", taskName);
     
     return TMAN_SUCCESS;
     
@@ -202,7 +233,4 @@ int TMAN_TaskWaitPeriod(int tick_ms){
 int TMAN_TaskStats(){
 }
 
-
 /***************************************End Of File*************************************/
-
-
