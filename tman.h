@@ -51,9 +51,9 @@ void pvTMAN_Task(void *pvParam);
 // Define prototypes (public interface)
 int TMAN_Init(int tick_ms);
 int TMAN_Close();
-int TMAN_TaskAdd(char taskName[]);
+int TMAN_TaskAdd(char taskName[], uint32_t priority);
 int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value);
-int TMAN_TaskWaitPeriod(int tick_ms);
+int TMAN_TaskWaitPeriod();
 int TMAN_TaskStats();
 
 #endif	/* TMAN_H */
