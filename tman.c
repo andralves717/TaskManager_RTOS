@@ -1,6 +1,6 @@
 /* 
  * File:   tman.c
- * Author: André Alves
+ * Author: Andrï¿½ Alves
  * Author: Eduardo Coelho
  *
  * Created on Jan 27, 2022
@@ -54,9 +54,27 @@ void pvTMAN_Task(void *pvParam) {
             task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
 
             if(pvItemTmp->PERIOD * pvItemTmp->NUM_ACTIVATIONS + pvItemTmp->PHASE < tman_ticks){
-                pvItemTmp->NUM_ACTIVATIONS++;
-                TaskHandle_t task_handle = xTaskGetHandle(pvItemTmp->NAME);
-                vTaskResume(task_handle);
+                // If it has precedence
+                if(pvItemTmp->PERIOD != NULL){
+                    // Has to check if NUM_ACTIVATIONS of the precedence is higher than himself to execute
+                    for(int j = 0; j < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx2 = pvTmanTaskListIdx2->pxNext, j++){
+                        task_tman * precendence_task = (task_tman *) pvTmanTaskListIdx2->pvOwner;
+                        // if we found the task which is the precedence
+                        if(strcmp(pvItemTmp->PRECEDENCE, precedence_task->NAME) == 0){
+                            // if precedence has executed before the constrained task, it can execute
+                            if(precedence_task->NUM_ACTIVATIONS > pvItemTmp->NUM_ACTIVATIONS){
+                                pvItemTmp->NUM_ACTIVATIONS++;
+                                TaskHandle_t task_handle = xTaskGetHandle(pvItemTmp->NAME);
+                                vTaskResume(task_handle);
+                            }
+                        }
+                    }
+                }
+                else{
+                    pvItemTmp->NUM_ACTIVATIONS++;
+                    TaskHandle_t task_handle = xTaskGetHandle(pvItemTmp->NAME);
+                    vTaskResume(task_handle);
+                }
 
             }
 
@@ -177,7 +195,7 @@ int TMAN_TaskAdd(char taskName[], uint32_t priority) {
  * 
  ********************************************************************/
 
-int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
+int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[]){
     
     ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
 
@@ -185,13 +203,21 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
         task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
         if (strcmp(pvItemTmp->NAME, taskName) == 0 ) {
             if( strcmp(attribute, "PERIOD") == 0 ){
-                pvItemTmp->PERIOD = value;
+                pvItemTmp->PERIOD = atoi(value);
             } else if (strcmp(attribute, "PHASE") == 0 ) {
-                pvItemTmp->PHASE = value;
+                pvItemTmp->PHASE = atoi(value);
             } else if (strcmp(attribute, "DEADLINE") == 0 ) {
-                pvItemTmp->DEADLINE = value;
-            } else if (strcmp(attribute, "PRECEDENCE CONSTRAINTS") == 0 ) {
-                pvItemTmp->PRECEDENCE_CONSTRAINTS = value;
+                pvItemTmp->DEADLINE = atoi(value);
+            } else if (strcmp(attribute, "PRECEDENCE") == 0 ) {
+                // Verify if value is actually a task_name that exists, if not return TMAN_FAIL
+                for(int j = 0; j < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx2 = pvTmanTaskListIdx2->pxNext, j++){
+                    task_tman * precedence_task = (task_tman *) pvTmanTaskListIdx2->pvOwner;
+                    if(strcmp(precedence_task->NAME, value) == 0){
+                        pvItemTmp->PRECEDENCE = value;
+                        return TMAN_SUCCESS;
+                    }
+                }
+                return TMAN_FAIL;
             } else {
                 return TMAN_FAIL;
             }
@@ -199,7 +225,7 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
         }
     }
     
-    printf("Adicionado à task %s o atributo %s com o valor %d\n\r",taskName, attribute, value);
+    printf("Adicionado ï¿½ task %s o atributo %s com o valor %d\n\r",taskName, attribute, value);
     
     return TMAN_FAIL;
     

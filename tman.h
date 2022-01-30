@@ -1,6 +1,6 @@
 /* 
  * File:   tman.h
- * Author: André Alves
+ * Author: Andrï¿½ Alves
  * Author: Eduardo Coelho
  *
  * Created on Jan 27, 2022
@@ -39,7 +39,7 @@ typedef struct task_tman {
     int PERIOD;
     int PHASE;
     int DEADLINE;
-    int PRECEDENCE_CONSTRAINTS;
+    char PRECEDENCE[16];
     int NUM_ACTIVATIONS;
     TickType_t LAST_ACTIVATION;
 } task_tman;

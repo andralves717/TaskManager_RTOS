@@ -80,7 +80,7 @@ int main_tman( void ) {
     // Welcome message
     
     printf("\n\n*********************************************\n\r");
-    printf("Teste Número 15\n\r");
+    printf("Teste Nï¿½mero 15\n\r");
     /* Create the tasks defined within this file. */
     xTaskCreate(taskBody, (const signed char * const) "Task A", 
                 configMINIMAL_STACK_SIZE, (void *) "Task A", PRIORITY_1, NULL);
@@ -96,12 +96,14 @@ int main_tman( void ) {
     TMAN_TaskAdd("Task A", PRIORITY_1);
     TMAN_TaskAdd("Task B", PRIORITY_2);
     
-    TMAN_TaskRegisterAttributes("Task A", "PERIOD", 5);
-    TMAN_TaskRegisterAttributes("Task B", "PERIOD", 7);
-    TMAN_TaskRegisterAttributes("Task A", "PHASE", 0);
-    TMAN_TaskRegisterAttributes("Task B", "PHASE", 1);
-    TMAN_TaskRegisterAttributes("Task A", "DEADLINE", 5);
-    TMAN_TaskRegisterAttributes("Task B", "DEADLINE", 7);
+    TMAN_TaskRegisterAttributes("Task A", "PERIOD", "5");
+    TMAN_TaskRegisterAttributes("Task B", "PERIOD", "7");
+    TMAN_TaskRegisterAttributes("Task A", "PHASE", "0");
+    TMAN_TaskRegisterAttributes("Task B", "PHASE", "1");
+    TMAN_TaskRegisterAttributes("Task A", "DEADLINE", "5");
+    TMAN_TaskRegisterAttributes("Task B", "DEADLINE", "7");
+
+    TMAN_TaskRegisterAttributes("Task A", "PRECEDENCE", "Task B");
     
 
     /* Finally start the scheduler. */
