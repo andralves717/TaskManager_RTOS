@@ -1,6 +1,6 @@
 /* 
  * File:   tman.h
- * Author: Andr� Alves
+ * Author: André Alves
  * Author: Eduardo Coelho
  *
  * Created on Jan 27, 2022

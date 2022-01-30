@@ -1,6 +1,6 @@
 /* 
  * File:   tman.c
- * Author: Andr� Alves
+ * Author: André Alves
  * Author: Eduardo Coelho
  *
  * Created on Jan 27, 2022
@@ -55,8 +55,9 @@ void pvTMAN_Task(void *pvParam) {
 
             if(pvItemTmp->PERIOD * pvItemTmp->NUM_ACTIVATIONS + pvItemTmp->PHASE < tman_ticks){
                 // If it has precedence
-                if(pvItemTmp->PERIOD != NULL){
+                if(pvItemTmp->PRECEDENCE != NULL){
                     // Has to check if NUM_ACTIVATIONS of the precedence is higher than himself to execute
+                    ListItem_t * pvTmanTaskListIdx2 = tman_task_list->xListEnd.pxNext;
                     for(int j = 0; j < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx2 = pvTmanTaskListIdx2->pxNext, j++){
                         task_tman * precendence_task = (task_tman *) pvTmanTaskListIdx2->pvOwner;
                         // if we found the task which is the precedence
@@ -210,6 +211,7 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[])
                 pvItemTmp->DEADLINE = atoi(value);
             } else if (strcmp(attribute, "PRECEDENCE") == 0 ) {
                 // Verify if value is actually a task_name that exists, if not return TMAN_FAIL
+                ListItem_t * pvTmanTaskListIdx2 = tman_task_list->xListEnd.pxNext;
                 for(int j = 0; j < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx2 = pvTmanTaskListIdx2->pxNext, j++){
                     task_tman * precedence_task = (task_tman *) pvTmanTaskListIdx2->pvOwner;
                     if(strcmp(precedence_task->NAME, value) == 0){
@@ -225,7 +227,7 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[])
         }
     }
     
-    printf("Adicionado � task %s o atributo %s com o valor %d\n\r",taskName, attribute, value);
+    printf("Adicionado na task %s o atributo %s com o valor %d\n\r",taskName, attribute, value);
     
     return TMAN_FAIL;
     

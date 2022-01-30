@@ -80,7 +80,7 @@ int main_tman( void ) {
     // Welcome message
     
     printf("\n\n*********************************************\n\r");
-    printf("Teste N�mero 15\n\r");
+    printf("Teste Número 15\n\r");
     /* Create the tasks defined within this file. */
     xTaskCreate(taskBody, (const signed char * const) "Task A", 
                 configMINIMAL_STACK_SIZE, (void *) "Task A", PRIORITY_1, NULL);
