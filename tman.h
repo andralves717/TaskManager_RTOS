@@ -40,6 +40,7 @@ typedef struct task_tman {
     int PHASE;
     int DEADLINE;
     int PRECEDENCE_CONSTRAINTS;
+    int NUM_ACTIVATIONS;
     TickType_t LAST_ACTIVATION;
 } task_tman;
 

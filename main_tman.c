@@ -40,49 +40,22 @@
 #define PERIOD_MS           ( 1 / portTICK_RATE_MS ) // 
 #define PERIOD_500MS           ( 500 / portTICK_RATE_MS ) // 
 #define PERIOD_1000MS           ( 1000 / portTICK_RATE_MS ) // 
+#define PERIOD_3000MS           ( 3000 / portTICK_RATE_MS ) // 
 
 /* Priorities of the demo application tasks (high numb. -> high prio.) */
 #define PRIORITY_1        ( tskIDLE_PRIORITY + 1 )
 #define PRIORITY_2        ( tskIDLE_PRIORITY + 2 )
-
-//
-//
-///*
-// * Prototypes and tasks
-// */
-//
-//void pvDataAcq( void ) {
-//    int voltage;
-//    TickType_t xLastWakeTime = xTaskGetTickCount();
-//    const TickType_t xFrequency = DATA_ACQ_PERIOD_MS;
-//
-//    for (;;) {
-//        // Wait for the next cycle.
-//        vTaskDelayUntil(&xLastWakeTime, xFrequency);
-//
-//        // Get one sample
-//        IFS1bits.AD1IF = 0; // Reset interrupt flag
-//        AD1CON1bits.ASAM = 1; // Start conversion
-//        while (IFS1bits.AD1IF == 0); // Wait fo EOC
-//
-//        // Convert to 0..3.3V 
-//        voltage = (int) (ADC1BUF0 *  100) / 1023;
-//
-//        xQueueSend(xQueue1, voltage, DATA_ACQ_PERIOD_MS);
-//        
-//    }
-//}
 
 void taskBody( void * pvParameters ) {
     for (;;) {
         // Wait for the next cycle.
         TMAN_TaskWaitPeriod((char *) pvParameters);
         int tcks = xTaskGetTickCount();
-        printf("[%s] Tick: %d \n", ((char *) pvParameters), tcks);
-        int i, j;
-        for (i = 0; i < 32; i++)
-            for (j = 0; j < 32; j++)
-                printf("\n");
+        printf("[%s] Tick: %d \n\r", ((char *) pvParameters), tcks);
+        int i, j,k;
+        for (i = 0; i < 5; i++)
+            for (j = 0; j < 5; j++)
+                printf("\r");
         
     }
 }
@@ -106,17 +79,17 @@ int main_tman( void ) {
 
     // Welcome message
     
-    printf("\n\n *********************************************\n\r");
-    printf("Teste Número 12\n");
+    printf("\n\n*********************************************\n\r");
+    printf("Teste Número 15\n\r");
     /* Create the tasks defined within this file. */
     xTaskCreate(taskBody, (const signed char * const) "Task A", 
                 configMINIMAL_STACK_SIZE, (void *) "Task A", PRIORITY_1, NULL);
     xTaskCreate(taskBody, (const signed char * const) "Task B", 
                 configMINIMAL_STACK_SIZE, (void *) "Task B", PRIORITY_2, NULL);
     
-    printf("task create 1 e 2\n");
+    printf("task create 1 e 2\n\r");
     
-    TMAN_Init(PERIOD_500MS);
+    TMAN_Init(PERIOD_3000MS);
 
 
     
@@ -126,7 +99,7 @@ int main_tman( void ) {
     TMAN_TaskRegisterAttributes("Task A", "PERIOD", 5);
     TMAN_TaskRegisterAttributes("Task B", "PERIOD", 7);
     TMAN_TaskRegisterAttributes("Task A", "PHASE", 0);
-    TMAN_TaskRegisterAttributes("Task B", "PHASE", 0);
+    TMAN_TaskRegisterAttributes("Task B", "PHASE", 1);
     TMAN_TaskRegisterAttributes("Task A", "DEADLINE", 5);
     TMAN_TaskRegisterAttributes("Task B", "DEADLINE", 7);
     
