@@ -69,9 +69,9 @@
 static void prvSetupHardware( void );
 
 /*
- * mainSetrLedBlink create the app tasks
+ * mainTMAN create the app tasks
  */
-extern void main_tman( void );
+extern int main_tman( void );
 
 /*-----------------------------------------------------------*/
 
@@ -84,9 +84,9 @@ int main( void )
 	prvSetupHardware();
 
     /* Run application */
-    main_tman();
+    int ret = main_tman();
     
-	return 0;
+	return ret;
 }
 /*-----------------------------------------------------------*/
 

@@ -30,8 +30,11 @@
 
 
 // Define return codes
-#define TMAN_SUCCESS 0
-#define TMAN_FAIL -1
+#define TMAN_SUCCESS                     0
+#define TMAN_FAIL                       -1
+#define TMAN_FAIL_INVALID_ATTRIBUTE     -2
+#define TMAN_FAIL_TASK_ALREADY_CREATED  -3
+#define TMAN_FAIL_TASK_NOT_CREATED      -4
 #define PRIORITY (tskIDLE_PRIORITY + 31)
 
 typedef struct task_tman {
@@ -39,6 +42,7 @@ typedef struct task_tman {
     int PERIOD;
     int PHASE;
     int DEADLINE;
+    int DEALINE_MISSES;
     int PRECEDENCE_CONSTRAINTS;
     int NUM_ACTIVATIONS;
     TickType_t LAST_ACTIVATION;

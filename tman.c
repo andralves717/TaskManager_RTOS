@@ -45,28 +45,30 @@ void pvTMAN_Task(void *pvParam) {
     for (;;) {
         // Wait for the next cycle.
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
-        //tman_ticks++;
-        printf("[TMAN] tick %d\n\r", tman_ticks++);
+        tman_ticks++;
+//        printf("[TMAN] tick %d\n\r", tman_ticks++);
         
         ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
 
         for (int i = 0; i < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx = pvTmanTaskListIdx->pxNext, i++) {
             task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
 
-            if(pvItemTmp->PERIOD * pvItemTmp->NUM_ACTIVATIONS + pvItemTmp->PHASE < tman_ticks){
+            int activation_tick = pvItemTmp->PERIOD * pvItemTmp->NUM_ACTIVATIONS + pvItemTmp->PHASE;
+            if(activation_tick < tman_ticks){
+//                printf("[task manager] coiso: %d\n",(activation_tick + pvItemTmp->DEADLINE));
+                if(tman_ticks > activation_tick + pvItemTmp->DEADLINE){
+                    pvItemTmp->DEALINE_MISSES++;
+                    printf("\x1B[37;41mDEADLINE MISSE in %s at %d\x1B[0m\n\r",pvItemTmp->NAME, tman_ticks);
+                    exit(-1);
+                }
                 pvItemTmp->NUM_ACTIVATIONS++;
                 TaskHandle_t task_handle = xTaskGetHandle(pvItemTmp->NAME);
                 vTaskResume(task_handle);
-
             }
-
         }
-
-        // TODO: Escolher task para acordar
-
     }
-
 }
+
 /********************************************************************
  * Function: 	TMAN_Init()
  * Precondition: 
@@ -110,9 +112,8 @@ int TMAN_Close(){
 
     ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
     
-    while(pvTmanTaskListIdx != NULL){
+    for (int i = 0; i < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx = pvTmanTaskListIdx->pxNext, i++) {
         vPortFree(&pvTmanTaskListIdx->pvOwner);
-        pvTmanTaskListIdx = pvTmanTaskListIdx->pxNext;
         vPortFree(&pvTmanTaskListIdx->pxPrevious);
     }
     vPortFree(&pvTmanTaskListIdx);
@@ -141,7 +142,7 @@ int TMAN_TaskAdd(char taskName[], uint32_t priority) {
     for(int i = 0; i < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx = pvTmanTaskListIdx->pxNext, i++){
         task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
         if(strcmp(pvItemTmp->NAME, taskName) == 0){
-            return TMAN_FAIL;
+            return TMAN_FAIL_TASK_ALREADY_CREATED;
         }
     }
     
@@ -149,6 +150,7 @@ int TMAN_TaskAdd(char taskName[], uint32_t priority) {
     task_tman * pvTaskTmanTmp = (task_tman *) pvPortMalloc(sizeof (task_tman));
     strcpy(pvTaskTmanTmp->NAME, taskName);
     pvTaskTmanTmp->NUM_ACTIVATIONS = 0;
+    pvTaskTmanTmp->DEALINE_MISSES = 0;
     pxItem->pvOwner = pvTaskTmanTmp;
     vListInitialiseItem(pxItem);
     pvTmanTaskListIdx->xItemValue = priority;
@@ -186,6 +188,8 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
         if (strcmp(pvItemTmp->NAME, taskName) == 0 ) {
             if( strcmp(attribute, "PERIOD") == 0 ){
                 pvItemTmp->PERIOD = value;
+                if (pvItemTmp->DEADLINE > 0)
+                    pvItemTmp->DEADLINE = value;
             } else if (strcmp(attribute, "PHASE") == 0 ) {
                 pvItemTmp->PHASE = value;
             } else if (strcmp(attribute, "DEADLINE") == 0 ) {
@@ -193,15 +197,13 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
             } else if (strcmp(attribute, "PRECEDENCE CONSTRAINTS") == 0 ) {
                 pvItemTmp->PRECEDENCE_CONSTRAINTS = value;
             } else {
-                return TMAN_FAIL;
+                return TMAN_FAIL_INVALID_ATTRIBUTE;
             }
             return TMAN_SUCCESS;
         }
     }
-    
-    printf("Adicionado à task %s o atributo %s com o valor %d\n\r",taskName, attribute, value);
-    
-    return TMAN_FAIL;
+        
+    return TMAN_FAIL_TASK_NOT_CREATED;
     
     
 }

@@ -37,25 +37,31 @@
 #define PBCLOCK 40000000L // Peripheral Bus Clock frequency, in Hz
 
 /* Set the tasks' period (in system ticks) */
-#define PERIOD_MS           ( 1 / portTICK_RATE_MS ) // 
-#define PERIOD_500MS           ( 500 / portTICK_RATE_MS ) // 
-#define PERIOD_1000MS           ( 1000 / portTICK_RATE_MS ) // 
-#define PERIOD_3000MS           ( 3000 / portTICK_RATE_MS ) // 
+#define PERIOD_MS                (    1 / portTICK_RATE_MS ) //
+#define PERIOD_2MS               (    2 / portTICK_RATE_MS ) //
+#define PERIOD_5MS               (    5 / portTICK_RATE_MS ) //
+#define PERIOD_500MS             (  500 / portTICK_RATE_MS ) // 
+#define PERIOD_1000MS            ( 1000 / portTICK_RATE_MS ) // 
+#define PERIOD_3000MS            ( 3000 / portTICK_RATE_MS ) // 
 
 /* Priorities of the demo application tasks (high numb. -> high prio.) */
-#define PRIORITY_1        ( tskIDLE_PRIORITY + 1 )
-#define PRIORITY_2        ( tskIDLE_PRIORITY + 2 )
+#define PRIORITY_A        ( tskIDLE_PRIORITY +  4 )
+#define PRIORITY_B        ( tskIDLE_PRIORITY +  6 )
+#define PRIORITY_C        ( tskIDLE_PRIORITY +  9 )
+#define PRIORITY_D        ( tskIDLE_PRIORITY + 12 )
+#define PRIORITY_E        ( tskIDLE_PRIORITY + 19 )
+#define PRIORITY_F        ( tskIDLE_PRIORITY +  2 )
 
 void taskBody( void * pvParameters ) {
     for (;;) {
         // Wait for the next cycle.
         TMAN_TaskWaitPeriod((char *) pvParameters);
         int tcks = xTaskGetTickCount();
-        printf("[%s] Tick: %d \n\r", ((char *) pvParameters), tcks);
+        printf("\x1B[31;4m[%s]\x1B[0m Tick: %d \n\r", ((char *) pvParameters), tcks);
         int i, j,k;
         for (i = 0; i < 5; i++)
             for (j = 0; j < 5; j++)
-                printf("\r");
+                k = i+j;
         
     }
 }
@@ -80,30 +86,218 @@ int main_tman( void ) {
     // Welcome message
     
     printf("\n\n*********************************************\n\r");
-    printf("Teste Número 15\n\r");
+    printf("Teste Número 17\n\r");
     /* Create the tasks defined within this file. */
-    xTaskCreate(taskBody, (const signed char * const) "Task A", 
-                configMINIMAL_STACK_SIZE, (void *) "Task A", PRIORITY_1, NULL);
-    xTaskCreate(taskBody, (const signed char * const) "Task B", 
-                configMINIMAL_STACK_SIZE, (void *) "Task B", PRIORITY_2, NULL);
+    xTaskCreate(taskBody, (const signed char * const) "Task A",
+            configMINIMAL_STACK_SIZE, (void *) "Task A", PRIORITY_A, NULL);
+    xTaskCreate(taskBody, (const signed char * const) "Task B",
+                configMINIMAL_STACK_SIZE, (void *) "Task B", PRIORITY_B, NULL);
+    xTaskCreate(taskBody, (const signed char * const) "Task C",
+                configMINIMAL_STACK_SIZE, (void *) "Task C", PRIORITY_C, NULL);
+    xTaskCreate(taskBody, (const signed char * const) "Task D",
+                configMINIMAL_STACK_SIZE, (void *) "Task D", PRIORITY_D, NULL);
+    xTaskCreate(taskBody, (const signed char * const) "Task E",
+                configMINIMAL_STACK_SIZE, (void *) "Task E", PRIORITY_E, NULL);
+    xTaskCreate(taskBody, (const signed char * const) "Task F",
+                configMINIMAL_STACK_SIZE, (void *) "Task F", PRIORITY_F, NULL);
+        
+    TMAN_Init(PERIOD_5MS);
     
-    printf("task create 1 e 2\n\r");
-    
-    TMAN_Init(PERIOD_3000MS);
+    int err;
 
+    
+    if (TMAN_TaskAdd("Task A", PRIORITY_A) == TMAN_FAIL_TASK_ALREADY_CREATED){
+        printf("Task Already Created\nExiting\n");
+        return -1;
+    }
+        
+    if (TMAN_TaskAdd("Task B", PRIORITY_B) == TMAN_FAIL_TASK_ALREADY_CREATED) {
+        printf("Task Already Created\nExiting\n");
+        return -1;
+    }
+    
+    if (TMAN_TaskAdd("Task C", PRIORITY_C) == TMAN_FAIL_TASK_ALREADY_CREATED) {
+        printf("Task Already Created\nExiting\n");
+        return -1;
+    }
 
+    if (TMAN_TaskAdd("Task D", PRIORITY_D) == TMAN_FAIL_TASK_ALREADY_CREATED) {
+        printf("Task Already Created\nExiting\n");
+        return -1;
+    }
     
-    TMAN_TaskAdd("Task A", PRIORITY_1);
-    TMAN_TaskAdd("Task B", PRIORITY_2);
-    
-    TMAN_TaskRegisterAttributes("Task A", "PERIOD", 5);
-    TMAN_TaskRegisterAttributes("Task B", "PERIOD", 7);
-    TMAN_TaskRegisterAttributes("Task A", "PHASE", 0);
-    TMAN_TaskRegisterAttributes("Task B", "PHASE", 1);
-    TMAN_TaskRegisterAttributes("Task A", "DEADLINE", 5);
-    TMAN_TaskRegisterAttributes("Task B", "DEADLINE", 7);
-    
+    if (TMAN_TaskAdd("Task E", PRIORITY_E) == TMAN_FAIL_TASK_ALREADY_CREATED) {
+        printf("Task Already Created\nExiting\n");
+        return -1;
+    }
 
+    if (TMAN_TaskAdd("Task F", PRIORITY_F) == TMAN_FAIL_TASK_ALREADY_CREATED) {
+        printf("Task Already Created\nExiting\n");
+        return -1;
+    }
+    
+    err = TMAN_TaskRegisterAttributes("Task A", "PERIOD", 1);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE){
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if ( err == TMAN_FAIL_TASK_NOT_CREATED){
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+    
+    err = TMAN_TaskRegisterAttributes("Task A", "PHASE", 0);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+    
+    err = TMAN_TaskRegisterAttributes("Task A", "DEADLINE", 5);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+    
+    err = TMAN_TaskRegisterAttributes("Task B", "PERIOD", 2);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+    
+    err = TMAN_TaskRegisterAttributes("Task B", "PHASE", 1);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+    
+    err = TMAN_TaskRegisterAttributes("Task B", "DEADLINE", 7);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+    
+    err = TMAN_TaskRegisterAttributes("Task C", "PERIOD", 3);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task C", "PHASE", 1);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task C", "DEADLINE", 7);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+    
+    err = TMAN_TaskRegisterAttributes("Task D", "PERIOD", 4);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task D", "PHASE", 1);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task D", "DEADLINE", 8);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task E", "PERIOD", 5);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task E", "PHASE", 1);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task E", "DEADLINE", 9);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+    
+    err = TMAN_TaskRegisterAttributes("Task F", "PERIOD", 6);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task F", "PHASE", 3);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task F", "DEADLINE", 9);
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+    
     /* Finally start the scheduler. */
     vTaskStartScheduler();
 
