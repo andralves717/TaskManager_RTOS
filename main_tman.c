@@ -40,6 +40,7 @@
 #define PERIOD_MS                (    1 / portTICK_RATE_MS ) //
 #define PERIOD_2MS               (    2 / portTICK_RATE_MS ) //
 #define PERIOD_5MS               (    5 / portTICK_RATE_MS ) //
+#define PERIOD_50MS              (   50 / portTICK_RATE_MS ) //
 #define PERIOD_500MS             (  500 / portTICK_RATE_MS ) // 
 #define PERIOD_1000MS            ( 1000 / portTICK_RATE_MS ) // 
 #define PERIOD_3000MS            ( 3000 / portTICK_RATE_MS ) // 
@@ -86,10 +87,10 @@ int main_tman( void ) {
     // Welcome message
     
     printf("\n\n*********************************************\n\r");
-    printf("Teste Número 17\n\r");
+    printf("Teste NÃºmero 17\n\r");
     /* Create the tasks defined within this file. */
     xTaskCreate(taskBody, (const signed char * const) "Task A",
-            configMINIMAL_STACK_SIZE, (void *) "Task A", PRIORITY_A, NULL);
+                configMINIMAL_STACK_SIZE, (void *) "Task A", PRIORITY_A, NULL);
     xTaskCreate(taskBody, (const signed char * const) "Task B",
                 configMINIMAL_STACK_SIZE, (void *) "Task B", PRIORITY_B, NULL);
     xTaskCreate(taskBody, (const signed char * const) "Task C",
@@ -136,7 +137,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("Task A", "PERIOD", 1);
+    err = TMAN_TaskRegisterAttributes("Task A", "PERIOD", "1");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE){
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -145,7 +146,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("Task A", "PHASE", 0);
+    err = TMAN_TaskRegisterAttributes("Task A", "PHASE", "0");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -154,7 +155,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("Task A", "DEADLINE", 5);
+    err = TMAN_TaskRegisterAttributes("Task A", "DEADLINE", "5");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -163,7 +164,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("Task B", "PERIOD", 2);
+    err = TMAN_TaskRegisterAttributes("Task B", "PERIOD", "2");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -172,7 +173,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("Task B", "PHASE", 1);
+    err = TMAN_TaskRegisterAttributes("Task B", "PHASE", "1");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -181,7 +182,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("Task B", "DEADLINE", 7);
+    err = TMAN_TaskRegisterAttributes("Task B", "DEADLINE", "7");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -190,7 +191,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("Task C", "PERIOD", 3);
+    err = TMAN_TaskRegisterAttributes("Task C", "PERIOD", "3");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -199,7 +200,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("Task C", "PHASE", 1);
+    err = TMAN_TaskRegisterAttributes("Task C", "PHASE", "1");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -208,7 +209,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("Task C", "DEADLINE", 7);
+    err = TMAN_TaskRegisterAttributes("Task C", "DEADLINE", "7");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -217,7 +218,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("Task D", "PERIOD", 4);
+    err = TMAN_TaskRegisterAttributes("Task D", "PERIOD", "4");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -226,7 +227,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("Task D", "PHASE", 1);
+    err = TMAN_TaskRegisterAttributes("Task D", "PHASE", "1");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -235,7 +236,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("Task D", "DEADLINE", 8);
+    err = TMAN_TaskRegisterAttributes("Task D", "DEADLINE", "8");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -244,7 +245,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("Task E", "PERIOD", 5);
+    err = TMAN_TaskRegisterAttributes("Task E", "PERIOD", "5");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -253,7 +254,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("Task E", "PHASE", 1);
+    err = TMAN_TaskRegisterAttributes("Task E", "PHASE", "1");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -262,7 +263,34 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("Task E", "DEADLINE", 9);
+    err = TMAN_TaskRegisterAttributes("Task E", "DEADLINE", "9");
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task F", "PERIOD", "6");
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task F", "PHASE", "3");
+    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
+        printf("Invalid Attribute\nExiting\n");
+        return -1;
+    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
+        printf("Task Not Created\nExiting\n");
+        return -1;
+    }
+
+    err = TMAN_TaskRegisterAttributes("Task F", "DEADLINE", "9");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -271,32 +299,9 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("Task F", "PERIOD", 6);
-    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
-        printf("Invalid Attribute\nExiting\n");
-        return -1;
-    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
-        printf("Task Not Created\nExiting\n");
-        return -1;
-    }
-
-    err = TMAN_TaskRegisterAttributes("Task F", "PHASE", 3);
-    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
-        printf("Invalid Attribute\nExiting\n");
-        return -1;
-    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
-        printf("Task Not Created\nExiting\n");
-        return -1;
-    }
-
-    err = TMAN_TaskRegisterAttributes("Task F", "DEADLINE", 9);
-    if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
-        printf("Invalid Attribute\nExiting\n");
-        return -1;
-    } else if (err == TMAN_FAIL_TASK_NOT_CREATED) {
-        printf("Task Not Created\nExiting\n");
-        return -1;
-    }
+    TMAN_TaskRegisterAttributes("Task A", "PRECEDENCE", "Task B");
+    
+    
     
     /* Finally start the scheduler. */
     vTaskStartScheduler();

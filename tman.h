@@ -1,6 +1,6 @@
 /* 
  * File:   tman.h
- * Author: André Alves
+ * Author: AndrÃ© Alves
  * Author: Eduardo Coelho
  *
  * Created on Jan 27, 2022
@@ -43,7 +43,7 @@ typedef struct task_tman {
     int PHASE;
     int DEADLINE;
     int DEALINE_MISSES;
-    int PRECEDENCE_CONSTRAINTS;
+    char PRECEDENCE[16];
     int NUM_ACTIVATIONS;
     TickType_t LAST_ACTIVATION;
 } task_tman;
@@ -57,7 +57,7 @@ void pvTMAN_Task(void *pvParam);
 int TMAN_Init(int tick_ms);
 int TMAN_Close();
 int TMAN_TaskAdd(char taskName[], uint32_t priority);
-int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value);
+int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[]);
 int TMAN_TaskWaitPeriod();
 int TMAN_TaskStats();
 

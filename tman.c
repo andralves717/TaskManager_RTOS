@@ -1,6 +1,6 @@
 /* 
  * File:   tman.c
- * Author: André Alves
+ * Author: AndrÃ© Alves
  * Author: Eduardo Coelho
  *
  * Created on Jan 27, 2022
@@ -52,15 +52,33 @@ void pvTMAN_Task(void *pvParam) {
 
         for (int i = 0; i < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx = pvTmanTaskListIdx->pxNext, i++) {
             task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
-
             int activation_tick = pvItemTmp->PERIOD * pvItemTmp->NUM_ACTIVATIONS + pvItemTmp->PHASE;
-            if(activation_tick < tman_ticks){
-//                printf("[task manager] coiso: %d\n",(activation_tick + pvItemTmp->DEADLINE));
-                if(tman_ticks > activation_tick + pvItemTmp->DEADLINE){
+            if (activation_tick < tman_ticks) {
+                if (tman_ticks > activation_tick + pvItemTmp->DEADLINE) {
                     pvItemTmp->DEALINE_MISSES++;
-                    printf("\x1B[37;41mDEADLINE MISSE in %s at %d\x1B[0m\n\r",pvItemTmp->NAME, tman_ticks);
+                    printf("\x1B[37;41mDEADLINE MISSE in %s at %d\x1B[0m\n\r", pvItemTmp->NAME, tman_ticks);
                     exit(-1);
                 }
+
+            // If it has precedence
+                if(pvItemTmp->PRECEDENCE != NULL){
+                    // Has to check if NUM_ACTIVATIONS of the precedence is higher than himself to execute
+                    ListItem_t * pvTmanTaskListIdx2 = tman_task_list->xListEnd.pxNext;
+                    for(int j = 0; j < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx2 = pvTmanTaskListIdx2->pxNext, j++){
+                        task_tman * precendence_task = (task_tman *) pvTmanTaskListIdx2->pvOwner;
+                        // if we found the task which is the precedence
+                        if(strcmp(pvItemTmp->PRECEDENCE, precendence_task->NAME) == 0){
+                            // if precedence has executed before the constrained task, it can execute
+                            if(precendence_task->NUM_ACTIVATIONS > pvItemTmp->NUM_ACTIVATIONS){
+                                pvItemTmp->NUM_ACTIVATIONS++;
+                                TaskHandle_t task_handle = xTaskGetHandle(pvItemTmp->NAME);
+                                vTaskResume(task_handle);
+                            }
+                        }
+                    }
+                }
+            }
+            else{
                 pvItemTmp->NUM_ACTIVATIONS++;
                 TaskHandle_t task_handle = xTaskGetHandle(pvItemTmp->NAME);
                 vTaskResume(task_handle);
@@ -179,7 +197,7 @@ int TMAN_TaskAdd(char taskName[], uint32_t priority) {
  * 
  ********************************************************************/
 
-int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
+int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[]){
     
     ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
 
@@ -187,15 +205,24 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
         task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
         if (strcmp(pvItemTmp->NAME, taskName) == 0 ) {
             if( strcmp(attribute, "PERIOD") == 0 ){
-                pvItemTmp->PERIOD = value;
-                if (pvItemTmp->DEADLINE > 0)
-                    pvItemTmp->DEADLINE = value;
+                pvItemTmp->PERIOD = atoi(value);
+                if (!(pvItemTmp->DEADLINE > 0))
+                    pvItemTmp->DEADLINE = atoi(value);
             } else if (strcmp(attribute, "PHASE") == 0 ) {
-                pvItemTmp->PHASE = value;
+                pvItemTmp->PHASE = atoi(value);
             } else if (strcmp(attribute, "DEADLINE") == 0 ) {
-                pvItemTmp->DEADLINE = value;
-            } else if (strcmp(attribute, "PRECEDENCE CONSTRAINTS") == 0 ) {
-                pvItemTmp->PRECEDENCE_CONSTRAINTS = value;
+                pvItemTmp->DEADLINE = atoi(value);
+            } else if (strcmp(attribute, "PRECEDENCE") == 0 ) {
+                // Verify if value is actually a task_name that exists, if not return TMAN_FAIL
+                ListItem_t * pvTmanTaskListIdx2 = tman_task_list->xListEnd.pxNext;
+                for(int j = 0; j < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx2 = pvTmanTaskListIdx2->pxNext, j++){
+                    task_tman * precedence_task = (task_tman *) pvTmanTaskListIdx2->pvOwner;
+                    if(strcmp(precedence_task->NAME, value) == 0){
+                        strcpy(pvItemTmp->PRECEDENCE, value);
+                        return TMAN_SUCCESS;
+                    }
+                }
+                return TMAN_FAIL;
             } else {
                 return TMAN_FAIL_INVALID_ATTRIBUTE;
             }
@@ -204,6 +231,7 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value){
     }
         
     return TMAN_FAIL_TASK_NOT_CREATED;
+
     
     
 }
