@@ -38,6 +38,8 @@
 #define TMAN_FAIL_TASK_NOT_CREATED      -4
 #define PRIORITY (tskIDLE_PRIORITY + 31)
 
+#define ARRAY_SIZE                      6
+
 typedef struct task_tman {
     char NAME[16];
     int PERIOD;
@@ -51,7 +53,7 @@ typedef struct task_tman {
     int IS_PRECEDENT;
 } task_tman;
 
-static List_t * tman_task_list;
+static task_tman tman_task_list[ARRAY_SIZE];
 
 static int tman_period;
 

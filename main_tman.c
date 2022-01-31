@@ -109,7 +109,9 @@ int main_tman( void ) {
     xTaskCreate(taskBody, (const signed char * const) "F",
                 configMINIMAL_STACK_SIZE, (void *) "F", PRIORITY_F, NULL);
         
-    TMAN_Init(PERIOD_10MS);
+    TMAN_Init(PERIOD_1000MS);
+    
+
     
     int err;
 
@@ -118,7 +120,7 @@ int main_tman( void ) {
         printf("Task Already Created\nExiting\n");
         return -1;
     }
-        
+    
     if (TMAN_TaskAdd("B", PRIORITY_B) == TMAN_FAIL_TASK_ALREADY_CREATED) {
         printf("Task Already Created\nExiting\n");
         return -1;
