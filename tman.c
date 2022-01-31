@@ -31,7 +31,7 @@
 #include "tman.h"
 
 
-static int tman_ticks = 0;
+static TickType_t tman_ticks = 0;
 
 static int tman_period;
 static int last_index = 0;

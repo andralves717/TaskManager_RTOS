@@ -109,7 +109,7 @@ int main_tman( void ) {
     xTaskCreate(taskBody, (const signed char * const) "F",
                 configMINIMAL_STACK_SIZE, (void *) "F", PRIORITY_F, NULL);
         
-    TMAN_Init(PERIOD_1000MS);
+    TMAN_Init(PERIOD_5MS);
     
 
     
