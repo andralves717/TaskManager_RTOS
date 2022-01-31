@@ -43,49 +43,24 @@ void pvTMAN_Task(void *pvParam) {
     const TickType_t xFrequency = tman_period;
 
     for (;;) {
-        // Wait for the next cycle.
-        vTaskDelayUntil(&xLastWakeTime, xFrequency);
-        tman_ticks++;
-        char buffer[10];
-        PrintStr(itoa(buffer, tman_ticks, 10));
-//        printf("[TMAN] tick %d\n\r", tman_ticks++);
         
         ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
 
         for (int i = 0; i < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx = pvTmanTaskListIdx->pxNext, i++) {
             task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
             int activation_tick = pvItemTmp->PERIOD * pvItemTmp->NUM_ACTIVATIONS + pvItemTmp->PHASE;
-            if (activation_tick < tman_ticks) {
-                if (tman_ticks > activation_tick + pvItemTmp->DEADLINE) {
-                    pvItemTmp->DEALINE_MISSES++;
-                    printf("\x1B[37;41mDEADLINE MISSE in %s at %d\x1B[0m\n\r", pvItemTmp->NAME, tman_ticks);
-                    exit(-1);
-                }
-
-            // If it has precedence
-                if(pvItemTmp->PRECEDENCE != NULL){
-                    // Has to check if NUM_ACTIVATIONS of the precedence is higher than himself to execute
-                    ListItem_t * pvTmanTaskListIdx2 = tman_task_list->xListEnd.pxNext;
-                    for(int j = 0; j < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx2 = pvTmanTaskListIdx2->pxNext, j++){
-                        task_tman * precendence_task = (task_tman *) pvTmanTaskListIdx2->pvOwner;
-                        // if we found the task which is the precedence
-                        if(strcmp(pvItemTmp->PRECEDENCE, precendence_task->NAME) == 0){
-                            // if precedence has executed before the constrained task, it can execute
-                            if(precendence_task->NUM_ACTIVATIONS > pvItemTmp->NUM_ACTIVATIONS){
-                                pvItemTmp->NUM_ACTIVATIONS++;
-                                TaskHandle_t task_handle = xTaskGetHandle(pvItemTmp->NAME);
-                                vTaskResume(task_handle);
-                            }
-                        }
-                    }
-                }
-            }
-            else{
-                pvItemTmp->NUM_ACTIVATIONS++;
+            if (activation_tick <= tman_ticks) {
                 TaskHandle_t task_handle = xTaskGetHandle(pvItemTmp->NAME);
                 vTaskResume(task_handle);
             }
         }
+        
+        if (tman_ticks > 6) exit(-1);
+        
+        // Wait for the next cycle.
+        vTaskDelayUntil(&xLastWakeTime, xFrequency);
+        tman_ticks++;
+        
     }
 }
 
@@ -221,6 +196,8 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[])
                     task_tman * precedence_task = (task_tman *) pvTmanTaskListIdx2->pvOwner;
                     if(strcmp(precedence_task->NAME, value) == 0){
                         strcpy(pvItemTmp->PRECEDENCE, value);
+                        precedence_task->SEMAPHORE = xSemaphoreCreateBinary(); // Create semaphore
+                        precedence_task->IS_PRECEDENT = 1;
                         return TMAN_SUCCESS;
                     }
                 }
@@ -253,8 +230,58 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[])
  * 
  ********************************************************************/
 
-int TMAN_TaskWaitPeriod(){
-    vTaskSuspend(NULL);
+int TMAN_TaskWaitPeriod(char * pvParameters){
+    
+    ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
+    for (int i = 0; i < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx = pvTmanTaskListIdx->pxNext, i++) {
+        task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
+        if (strcmp(pvItemTmp->NAME, pvParameters) == 0) {
+            if (pvItemTmp->NUM_ACTIVATIONS > 0 && tman_ticks > pvItemTmp->PERIOD * (pvItemTmp->NUM_ACTIVATIONS - 1) + pvItemTmp->PHASE + pvItemTmp->DEADLINE) {
+                pvItemTmp->DEALINE_MISSES++;
+                uint8_t message[80];
+                sprintf(message, "DEADLINE MISS in %s at %d\n\r", pvItemTmp->NAME, tman_ticks);
+                PrintStr(message);
+            }
+        }
+    }
+    
+    TaskHandle_t task_handle = xTaskGetHandle(pvParameters);    
+    vTaskSuspend(task_handle);
+
+    pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
+    for (int i = 0; i < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx = pvTmanTaskListIdx->pxNext, i++) {
+        task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
+        if (strcmp(pvItemTmp->NAME, pvParameters) == 0 ) {
+            // If it has precedence
+            if(pvItemTmp->PRECEDENCE != NULL){
+                // Has to take semaphore of the precedence_constraint task
+                ListItem_t * pvTmanTaskListIdx2 = tman_task_list->xListEnd.pxNext;
+                for(int j = 0; j < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx2 = pvTmanTaskListIdx2->pxNext, j++){
+                    task_tman * precedence_task = (task_tman *) pvTmanTaskListIdx2->pvOwner;
+                    // if we found the task which is the precedence
+                    if(strcmp(pvItemTmp->PRECEDENCE, precedence_task->NAME) == 0){
+                        xSemaphoreTake( precedence_task->SEMAPHORE, portMAX_DELAY);
+                        PrintStr("TAKE - ");
+                        break;
+                    }
+                }
+            }
+            // If it does precedence
+            if(pvItemTmp->IS_PRECEDENT == 1){
+                xSemaphoreGive( pvItemTmp->SEMAPHORE);
+                PrintStr("GIVE - ");
+            }
+            
+            pvItemTmp->NUM_ACTIVATIONS++;
+            
+            int activation_tick = pvItemTmp->PERIOD * pvItemTmp->NUM_ACTIVATIONS + pvItemTmp->PHASE;
+            uint8_t message[80];
+            sprintf(message, "Task %s - next activation_tick %d\n\r", pvItemTmp->NAME, activation_tick);
+            PrintStr(message);
+            break;
+        }
+    }
+    
 }
 
 /********************************************************************
