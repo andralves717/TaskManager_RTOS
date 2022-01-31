@@ -27,6 +27,7 @@
 #include "task.h"
 #include "queue.h"
 #include "list.h"
+#include "semphr.h"
 
 
 // Define return codes
@@ -42,6 +43,8 @@ typedef struct task_tman {
     char PRECEDENCE[16];
     int NUM_ACTIVATIONS;
     TickType_t LAST_ACTIVATION;
+    SemaphoreHandle_t SEMAPHORE;
+    int IS_PRECEDENT;
 } task_tman;
 
 static List_t * tman_task_list;
@@ -54,7 +57,7 @@ int TMAN_Init(int tick_ms);
 int TMAN_Close();
 int TMAN_TaskAdd(char taskName[], uint32_t priority);
 int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], int value);
-int TMAN_TaskWaitPeriod();
+int TMAN_TaskWaitPeriod(char * pvParameters);
 int TMAN_TaskStats();
 
 #endif	/* TMAN_H */

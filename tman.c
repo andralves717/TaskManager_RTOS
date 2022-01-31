@@ -54,35 +54,11 @@ void pvTMAN_Task(void *pvParam) {
             task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
 
             if(pvItemTmp->PERIOD * pvItemTmp->NUM_ACTIVATIONS + pvItemTmp->PHASE < tman_ticks){
-                // If it has precedence
-                if(pvItemTmp->PRECEDENCE != NULL){
-                    // Has to check if NUM_ACTIVATIONS of the precedence is higher than himself to execute
-                    ListItem_t * pvTmanTaskListIdx2 = tman_task_list->xListEnd.pxNext;
-                    for(int j = 0; j < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx2 = pvTmanTaskListIdx2->pxNext, j++){
-                        task_tman * precendence_task = (task_tman *) pvTmanTaskListIdx2->pvOwner;
-                        // if we found the task which is the precedence
-                        if(strcmp(pvItemTmp->PRECEDENCE, precedence_task->NAME) == 0){
-                            // if precedence has executed before the constrained task, it can execute
-                            if(precedence_task->NUM_ACTIVATIONS > pvItemTmp->NUM_ACTIVATIONS){
-                                pvItemTmp->NUM_ACTIVATIONS++;
-                                TaskHandle_t task_handle = xTaskGetHandle(pvItemTmp->NAME);
-                                vTaskResume(task_handle);
-                            }
-                        }
-                    }
-                }
-                else{
-                    pvItemTmp->NUM_ACTIVATIONS++;
-                    TaskHandle_t task_handle = xTaskGetHandle(pvItemTmp->NAME);
-                    vTaskResume(task_handle);
-                }
-
+                TaskHandle_t task_handle = xTaskGetHandle(pvItemTmp->NAME);
+                vTaskResume(task_handle);
             }
 
         }
-
-        // TODO: Escolher task para acordar
-
     }
 
 }
@@ -216,6 +192,8 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[])
                     task_tman * precedence_task = (task_tman *) pvTmanTaskListIdx2->pvOwner;
                     if(strcmp(precedence_task->NAME, value) == 0){
                         pvItemTmp->PRECEDENCE = value;
+                        precedence_task->SEMAPHORE = xSemaphoreCreateBinary(); // Create semaphore
+                        precedence_task->IS_PRECEDENT = 1;
                         return TMAN_SUCCESS;
                     }
                 }
@@ -249,8 +227,34 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[])
  * 
  ********************************************************************/
 
-int TMAN_TaskWaitPeriod(){
+int TMAN_TaskWaitPeriod(char * pvParameters){
     vTaskSuspend(NULL);
+
+    ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
+    for (int i = 0; i < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx = pvTmanTaskListIdx->pxNext, i++) {
+        task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx->pvOwner;
+        if (strcmp(pvItemTmp->NAME, pvParameters) == 0 ) {
+            // If it has precedence
+            if(pvItemTmp->PRECEDENCE != NULL){
+                // Has to take semaphore of the precedence_constraint task
+                ListItem_t * pvTmanTaskListIdx2 = tman_task_list->xListEnd.pxNext;
+                for(int j = 0; j < tman_task_list->uxNumberOfItems; pvTmanTaskListIdx2 = pvTmanTaskListIdx2->pxNext, j++){
+                    task_tman * precendence_task = (task_tman *) pvTmanTaskListIdx->pvOwner;
+                    // if we found the task which is the precedence
+                    if(strcmp(pvItemTmp->PRECEDENCE, precedence_task->NAME) == 0){
+                        xSemaphoreTake( precedence_task->SEMAPHORE, portMAX_DELAY);
+                        break;
+                    }
+                }
+            // If it does precedence
+            if(pvItemTmp->IS_PRECEDENT == 1){
+                xSemaphoreGive( pvItemTmp->SEMAPHORE);
+            }
+            pvItemTmp->NUM_ACTIVATIONS++;
+            break;
+        }
+    }
+    
 }
 
 /********************************************************************
