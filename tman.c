@@ -46,6 +46,8 @@ void pvTMAN_Task(void *pvParam) {
         // Wait for the next cycle.
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
         tman_ticks++;
+        char buffer[10];
+        PrintStr(itoa(buffer, tman_ticks, 10));
 //        printf("[TMAN] tick %d\n\r", tman_ticks++);
         
         ListItem_t * pvTmanTaskListIdx = tman_task_list->xListEnd.pxNext;
