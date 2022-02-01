@@ -38,22 +38,24 @@ static int last_index = 0;
 
 void pvTMAN_Task(void *pvParam) {
     TickType_t xLastWakeTime = xTaskGetTickCount();
+    vTaskDelay(1);
     const TickType_t xFrequency = tman_period;
 
     for (;;) {
        
         for (int i = 0; i < ARRAY_SIZE; i++) {
-            int activation_tick = (tman_task_list[i].PERIOD * tman_task_list[i].NUM_ACTIVATIONS) + tman_task_list[i].PHASE;
-//            printf("\n    ticks: %d; activation tick: %d; Task: %s", tman_ticks, activation_tick, tman_task_list[i].NAME);
-            if (activation_tick <= tman_ticks) {
-//                printf("        Task: %s", tman_task_list[i].NAME);
+            int act = 0;
+            if (!tman_task_list[i].PERIOD == 0)
+                act = (xLastWakeTime % (tman_task_list[i].PERIOD * tman_period)) - (tman_task_list[i].PHASE * tman_period);
+            if (act == 0) {
 
                 TaskHandle_t task_handle = xTaskGetHandle(tman_task_list[i].NAME);
                 vTaskResume(task_handle);
             }
         }
         
-        if (tman_ticks > 3) exit(-1);
+//        //uncomment if needed
+//        if (tman_ticks > 11) exit(-1);
         
         // Wait for the next cycle.
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
@@ -92,7 +94,6 @@ int TMAN_Init(int tick_ms) {
  * Precondition: 
  * Input: 		
  * Returns:      TMAN_SUCCESS if Ok.
- *               TMAN_FAIL error code in case of failure (see tman.h)
  * Side Effects:	 
  * Overview:     Terminates Task Manager Framework.
  *		
@@ -102,15 +103,13 @@ int TMAN_Init(int tick_ms) {
 
 int TMAN_Close(){
 
-    
-    
     return TMAN_SUCCESS;
 }
 
 /********************************************************************
  * Function: 	TMAN_TaskAdd()
  * Precondition: 
- * Input: 		
+ * Input:        taskName and 
  * Returns:      TMAN_SUCCESS if Ok.
  *               TMAN_FAIL error code in case of failure (see tman.h)
  * Side Effects:	 
@@ -120,17 +119,11 @@ int TMAN_Close(){
  * 
  ********************************************************************/
 
-int TMAN_TaskAdd(char taskName[], uint32_t priority) {
-
-//    task_tman TaskTmanTmp;
-//    strcpy(TaskTmanTmp.NAME, taskName);
-//    TaskTmanTmp.NUM_ACTIVATIONS = 0;
-//    TaskTmanTmp.DEALINE_MISSES = 0;
+int TMAN_TaskAdd(char taskName[]) {
 
     strcpy(tman_task_list[last_index].NAME, taskName);
     tman_task_list[last_index].NUM_ACTIVATIONS = 0;
     tman_task_list[last_index++].DEALINE_MISSES = 0;
-//            tman_task_list[i] = TaskTmanTmp;
     printf("Task <%s> adicionada.\n\r", taskName);
     return TMAN_SUCCESS;
 }
@@ -205,21 +198,6 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[])
  ********************************************************************/
 
 int TMAN_TaskWaitPeriod(char * pvParameters){
-    
-
-    
-//    ListItem_t * pvTmanTaskListIdx = tman_task_list.xListEnd.pxNext;
-//    for (int i = 0; i < tman_task_list.uxNumberOfItems; pvTmanTaskListIdx = pvTmanTaskListIdx.pxNext, i++) {
-//        task_tman * pvItemTmp = (task_tman *) pvTmanTaskListIdx.pvOwner;
-//        if (strcmp(pvItemTmp.NAME, pvParameters) == 0) {
-//            if (pvItemTmp.NUM_ACTIVATIONS > 0 && tman_ticks > pvItemTmp.PERIOD * (pvItemTmp.NUM_ACTIVATIONS - 1) + pvItemTmp.PHASE + pvItemTmp.DEADLINE) {
-//                pvItemTmp.DEALINE_MISSES++;
-//                uint8_t message[80];
-//                sprintf(message, "DEADLINE MISS in %s at %d\n\r", pvItemTmp.NAME, tman_ticks);
-//                PrintStr(message);
-//            }
-//        }
-//    }
 
     for (int i = 0; i < ARRAY_SIZE; i++) {
         
@@ -240,12 +218,6 @@ int TMAN_TaskWaitPeriod(char * pvParameters){
     
     for (int i = 0; i < ARRAY_SIZE; i++) {
         if (strcmp(tman_task_list[i].NAME, pvParameters) == 0) {
-
-//            // If it does precedence
-//            if (tman_task_list[i].IS_PRECEDENT == 1) {
-//                xSemaphoreGive(tman_task_list[i].SEMAPHORE);
-//                PrintStr("GIVE - ");
-//            }
             
             // If it has precedence
             if (tman_task_list[i].PRECEDENCE != NULL) {
@@ -256,7 +228,6 @@ int TMAN_TaskWaitPeriod(char * pvParameters){
 
                     if (strcmp(tman_task_list[i].PRECEDENCE, tman_task_list[j].NAME) == 0) {
                         xSemaphoreTake(tman_task_list[j].SEMAPHORE, portMAX_DELAY);
-                        PrintStr("TAKE - ");
                         break;
                     }
                 }
@@ -266,10 +237,6 @@ int TMAN_TaskWaitPeriod(char * pvParameters){
 
             tman_task_list[i].NUM_ACTIVATIONS++;
 
-//            int activation_tick = tman_task_list[i].PERIOD * tman_task_list[i].NUM_ACTIVATIONS + tman_task_list[i].PHASE;
-//            uint8_t message[80];
-//            sprintf(message, "Task %s - next activation_tick %d\n\r", tman_task_list[i].NAME, activation_tick);
-//            PrintStr(message);
             break;
         }
     }
@@ -288,8 +255,18 @@ int TMAN_TaskWaitPeriod(char * pvParameters){
  * 
  ********************************************************************/
 
-int TMAN_TaskStats(){
-    // // // // // // // // // // // // // // // // // // // // // // // // //
+int TMAN_TaskStats(char taskName[]){
+    
+    for (int i = 0; i < ARRAY_SIZE; i++) {
+        if (strcmp(tman_task_list[i].NAME, taskName) == 0) {
+            uint8_t message[80];
+            sprintf(message, "Task %s: Activation Number: %d", taskName, tman_task_list[i].NUM_ACTIVATIONS);
+            PrintStr(message);
+            return TMAN_SUCCESS;
+        }
+    }
+    
+    return TMAN_FAIL;
 }
 
 /***************************************End Of File*************************************/

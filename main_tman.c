@@ -44,17 +44,18 @@
 #define PERIOD_5MS               (    5 / portTICK_RATE_MS ) //
 #define PERIOD_10MS              (   10 / portTICK_RATE_MS ) //
 #define PERIOD_50MS              (   50 / portTICK_RATE_MS ) //
+#define PERIOD_100MS             (  100 / portTICK_RATE_MS ) // 
 #define PERIOD_500MS             (  500 / portTICK_RATE_MS ) // 
 #define PERIOD_1000MS            ( 1000 / portTICK_RATE_MS ) // 
 #define PERIOD_3000MS            ( 3000 / portTICK_RATE_MS ) // 
 
 /* Priorities of the demo application tasks (high numb. -> high prio.) */
-#define PRIORITY_A        ( tskIDLE_PRIORITY + 23 )
-#define PRIORITY_B        ( tskIDLE_PRIORITY +  5 )
-#define PRIORITY_C        ( tskIDLE_PRIORITY + 10 )
-#define PRIORITY_D        ( tskIDLE_PRIORITY +  7 )
+#define PRIORITY_A        ( tskIDLE_PRIORITY +  4 )
+#define PRIORITY_B        ( tskIDLE_PRIORITY +  4 )
+#define PRIORITY_C        ( tskIDLE_PRIORITY +  3 )
+#define PRIORITY_D        ( tskIDLE_PRIORITY +  3 )
 #define PRIORITY_E        ( tskIDLE_PRIORITY +  2 )
-#define PRIORITY_F        ( tskIDLE_PRIORITY +  9 )
+#define PRIORITY_F        ( tskIDLE_PRIORITY +  1 )
 
 void taskBody( void * pvParameters ) {
     for (;;) {
@@ -64,13 +65,13 @@ void taskBody( void * pvParameters ) {
         int tcks = xTaskGetTickCount();
       
         uint8_t message[80];
-        sprintf(message, "%s, %d\r\n", ((char *) pvParameters) , tcks);
+        sprintf(message, "%s, %d\n\r", ((char *) pvParameters) , tcks);
         PrintStr(message);
-//        
-//        int i, j,k;
-//        for (i = 0; i < 2; i++)
-//            for (j = 0; j < 2; j++)
-//                k = i*j;
+        
+        int i, j,k;
+        for (i = 0; i < 36; i++)
+            for (j = 0; j < 36; j++)
+                k = i*j;
     }
 }
 
@@ -109,44 +110,44 @@ int main_tman( void ) {
     xTaskCreate(taskBody, (const signed char * const) "F",
                 configMINIMAL_STACK_SIZE, (void *) "F", PRIORITY_F, NULL);
         
-    TMAN_Init(PERIOD_5MS);
+    TMAN_Init(PERIOD_100MS);
     
 
     
     int err;
 
     
-    if (TMAN_TaskAdd("A", PRIORITY_A) == TMAN_FAIL_TASK_ALREADY_CREATED){
+    if (TMAN_TaskAdd("A") == TMAN_FAIL_TASK_ALREADY_CREATED){
         printf("Task Already Created\nExiting\n");
         return -1;
     }
     
-    if (TMAN_TaskAdd("B", PRIORITY_B) == TMAN_FAIL_TASK_ALREADY_CREATED) {
+    if (TMAN_TaskAdd("B") == TMAN_FAIL_TASK_ALREADY_CREATED) {
         printf("Task Already Created\nExiting\n");
         return -1;
     }
     
-    if (TMAN_TaskAdd("C", PRIORITY_C) == TMAN_FAIL_TASK_ALREADY_CREATED) {
+    if (TMAN_TaskAdd("C") == TMAN_FAIL_TASK_ALREADY_CREATED) {
         printf("Task Already Created\nExiting\n");
         return -1;
     }
 
-    if (TMAN_TaskAdd("D", PRIORITY_D) == TMAN_FAIL_TASK_ALREADY_CREATED) {
+    if (TMAN_TaskAdd("D") == TMAN_FAIL_TASK_ALREADY_CREATED) {
         printf("Task Already Created\nExiting\n");
         return -1;
     }
     
-    if (TMAN_TaskAdd("E", PRIORITY_E) == TMAN_FAIL_TASK_ALREADY_CREATED) {
+    if (TMAN_TaskAdd("E") == TMAN_FAIL_TASK_ALREADY_CREATED) {
         printf("Task Already Created\nExiting\n");
         return -1;
     }
 
-    if (TMAN_TaskAdd("F", PRIORITY_F) == TMAN_FAIL_TASK_ALREADY_CREATED) {
+    if (TMAN_TaskAdd("F") == TMAN_FAIL_TASK_ALREADY_CREATED) {
         printf("Task Already Created\nExiting\n");
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("A", "PERIOD", "5");
+    err = TMAN_TaskRegisterAttributes("A", "PERIOD", "1");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE){
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -164,7 +165,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("A", "DEADLINE", "5");
+    err = TMAN_TaskRegisterAttributes("A", "DEADLINE", "1");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -173,7 +174,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("B", "PERIOD", "6");
+    err = TMAN_TaskRegisterAttributes("B", "PERIOD", "1");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -182,7 +183,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("B", "PHASE", "1");
+    err = TMAN_TaskRegisterAttributes("B", "PHASE", "0");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -191,7 +192,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("B", "DEADLINE", "6");
+    err = TMAN_TaskRegisterAttributes("B", "DEADLINE", "1");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -200,7 +201,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("C", "PERIOD", "9");
+    err = TMAN_TaskRegisterAttributes("C", "PERIOD", "0");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -218,7 +219,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("C", "DEADLINE", "9");
+    err = TMAN_TaskRegisterAttributes("C", "DEADLINE", "0");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -227,7 +228,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("D", "PERIOD", "13");
+    err = TMAN_TaskRegisterAttributes("D", "PERIOD", "2");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -245,7 +246,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("D", "DEADLINE", "13");
+    err = TMAN_TaskRegisterAttributes("D", "DEADLINE", "2");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -254,7 +255,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("E", "PERIOD", "7");
+    err = TMAN_TaskRegisterAttributes("E", "PERIOD", "5");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -263,7 +264,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("E", "PHASE", "1");
+    err = TMAN_TaskRegisterAttributes("E", "PHASE", "2");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -272,7 +273,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("E", "DEADLINE", "7");
+    err = TMAN_TaskRegisterAttributes("E", "DEADLINE", "5");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -281,7 +282,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("F", "PERIOD", "6");
+    err = TMAN_TaskRegisterAttributes("F", "PERIOD", "10");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -290,7 +291,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("F", "PHASE", "3");
+    err = TMAN_TaskRegisterAttributes("F", "PHASE", "0");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -299,7 +300,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("F", "DEADLINE", "6");
+    err = TMAN_TaskRegisterAttributes("F", "DEADLINE", "10");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -308,7 +309,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    TMAN_TaskRegisterAttributes("A", "PRECEDENCE", "B");
+    TMAN_TaskRegisterAttributes("C", "PRECEDENCE", "A");
     
     
     

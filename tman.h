@@ -36,7 +36,7 @@
 #define TMAN_FAIL_INVALID_ATTRIBUTE     -2
 #define TMAN_FAIL_TASK_ALREADY_CREATED  -3
 #define TMAN_FAIL_TASK_NOT_CREATED      -4
-#define PRIORITY (tskIDLE_PRIORITY + 31)
+#define PRIORITY (tskIDLE_PRIORITY + 4)
 
 #define ARRAY_SIZE                      6
 
@@ -48,7 +48,6 @@ typedef struct task_tman {
     int DEALINE_MISSES;
     char PRECEDENCE[16];
     int NUM_ACTIVATIONS;
-    TickType_t LAST_ACTIVATION;
     SemaphoreHandle_t SEMAPHORE;
     int IS_PRECEDENT;
 } task_tman;
@@ -61,9 +60,9 @@ void pvTMAN_Task(void *pvParam);
 // Define prototypes (public interface)
 int TMAN_Init(int tick_ms);
 int TMAN_Close();
-int TMAN_TaskAdd(char taskName[], uint32_t priority);
+int TMAN_TaskAdd(char taskName[]);
 int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[]);
 int TMAN_TaskWaitPeriod(char * pvParameters);
-int TMAN_TaskStats();
+int TMAN_TaskStats(char taskName[]);
 
 #endif	/* TMAN_H */
