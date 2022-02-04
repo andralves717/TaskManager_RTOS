@@ -45,6 +45,7 @@
 #define PERIOD_10MS              (   10 / portTICK_RATE_MS ) //
 #define PERIOD_50MS              (   50 / portTICK_RATE_MS ) //
 #define PERIOD_100MS             (  100 / portTICK_RATE_MS ) // 
+#define PERIOD_200MS             (  200 / portTICK_RATE_MS ) // 
 #define PERIOD_500MS             (  500 / portTICK_RATE_MS ) // 
 #define PERIOD_1000MS            ( 1000 / portTICK_RATE_MS ) // 
 #define PERIOD_3000MS            ( 3000 / portTICK_RATE_MS ) // 
@@ -55,7 +56,7 @@
 #define PRIORITY_C        ( tskIDLE_PRIORITY +  3 )
 #define PRIORITY_D        ( tskIDLE_PRIORITY +  3 )
 #define PRIORITY_E        ( tskIDLE_PRIORITY +  2 )
-#define PRIORITY_F        ( tskIDLE_PRIORITY +  1 )
+#define PRIORITY_F        ( tskIDLE_PRIORITY +  2 )
 
 void taskBody( void * pvParameters ) {
     for (;;) {
@@ -63,10 +64,10 @@ void taskBody( void * pvParameters ) {
         TMAN_TaskWaitPeriod((char *) pvParameters);
         
         int tcks = xTaskGetTickCount();
-      
+        
         uint8_t message[80];
-        sprintf(message, "%s, %d\n\r", ((char *) pvParameters) , tcks);
-        PrintStr(message);
+        sprintf(message, "%s, %d\n\r", ((char *) pvParameters), tcks);
+        PrintStr(message);        
         
         int i, j,k;
         for (i = 0; i < 36; i++)
@@ -95,7 +96,11 @@ int main_tman( void ) {
     // Welcome message
     
     printf("\n\n*********************************************\n\r");
-    printf("Teste Número 19\n\r");
+    printf("\nTask Management framework for FreeRTOS\n\r");
+    
+    printf("\n\r%-14s - %-5d\n\r%-15s - %-5d", "Eduardo Coelho", 88867, "André Alves", 88811);
+    
+    printf("\n\n*********************************************\n\r");
     /* Create the tasks defined within this file. */
     xTaskCreate(taskBody, (const signed char * const) "A",
                 configMINIMAL_STACK_SIZE, (void *) "A", PRIORITY_A, NULL);
@@ -110,9 +115,19 @@ int main_tman( void ) {
     xTaskCreate(taskBody, (const signed char * const) "F",
                 configMINIMAL_STACK_SIZE, (void *) "F", PRIORITY_F, NULL);
         
-    TMAN_Init(PERIOD_100MS);
+    TMAN_Init(PERIOD_200MS);
     
 
+    // CONFIG TO SEND
+    // 200ms tick
+    // Task, Priority, Period, Phase, Dependencies
+    //  A,4,1,0
+    //  B,4,1,0,F
+    //  C,3,3,0
+    //  D,3,3,1
+    //  E,2,4,0
+    //  F,2,4,2
+    
     
     int err;
 
@@ -201,7 +216,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("C", "PERIOD", "0");
+    err = TMAN_TaskRegisterAttributes("C", "PERIOD", "3");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -219,7 +234,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("C", "DEADLINE", "0");
+    err = TMAN_TaskRegisterAttributes("C", "DEADLINE", "3");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -228,7 +243,7 @@ int main_tman( void ) {
         return -1;
     }
     
-    err = TMAN_TaskRegisterAttributes("D", "PERIOD", "2");
+    err = TMAN_TaskRegisterAttributes("D", "PERIOD", "3");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -246,7 +261,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("D", "DEADLINE", "2");
+    err = TMAN_TaskRegisterAttributes("D", "DEADLINE", "3");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -255,7 +270,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("E", "PERIOD", "5");
+    err = TMAN_TaskRegisterAttributes("E", "PERIOD", "4");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -264,7 +279,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("E", "PHASE", "2");
+    err = TMAN_TaskRegisterAttributes("E", "PHASE", "0");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -273,7 +288,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("E", "DEADLINE", "5");
+    err = TMAN_TaskRegisterAttributes("E", "DEADLINE", "4");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -282,7 +297,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("F", "PERIOD", "10");
+    err = TMAN_TaskRegisterAttributes("F", "PERIOD", "4");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -291,7 +306,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("F", "PHASE", "0");
+    err = TMAN_TaskRegisterAttributes("F", "PHASE", "2");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -300,7 +315,7 @@ int main_tman( void ) {
         return -1;
     }
 
-    err = TMAN_TaskRegisterAttributes("F", "DEADLINE", "10");
+    err = TMAN_TaskRegisterAttributes("F", "DEADLINE", "4");
     if (err == TMAN_FAIL_INVALID_ATTRIBUTE) {
         printf("Invalid Attribute\nExiting\n");
         return -1;
@@ -309,12 +324,12 @@ int main_tman( void ) {
         return -1;
     }
     
-    TMAN_TaskRegisterAttributes("C", "PRECEDENCE", "A");
-    
-    
+    TMAN_TaskRegisterAttributes("B", "PRECEDENCE", "F");
     
     /* Finally start the scheduler. */
     vTaskStartScheduler();
+    
+    
 
     /* Will only reach here if there is insufficient heap available to start
     the scheduler. */
