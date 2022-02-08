@@ -57,7 +57,7 @@ void pvTMAN_Task(void *pvParam) {
         // Wait for the next cycle.
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
         
-        
+        // Uncomment to test TMAN_TaskStats()
         if (tman_ticks > 20) {
             PrintStr("Testing TMAN_TaskStats(\"B\") - tman.c line 61\n\r");
             
@@ -78,7 +78,6 @@ void pvTMAN_Task(void *pvParam) {
  * Precondition: 
  * Input: 		 tick_ms
  * Returns:      TMAN_SUCCESS if Ok.
- *               TMAN_FAIL error code in case of failure (see tman.h)
  * Side Effects:	 
  * Overview:     Initializes Task Manager Framework.
  *		
@@ -122,7 +121,6 @@ int TMAN_Close(){
  * Precondition: 
  * Input:        taskName 
  * Returns:      TMAN_SUCCESS if Ok.
- *               TMAN_FAIL error code in case of failure (see tman.h)
  * Side Effects:	 
  * Overview:     Add a task to the framework.
  *		
@@ -145,6 +143,9 @@ int TMAN_TaskAdd(char taskName[]) {
  * 
  * Returns:      TMAN_SUCCESS if Ok.
  *               TMAN_FAIL error code in case of failure (see tman.h)
+ *               TMAN_FAIL_INVALID_ATTRIBUTE if attribute is not valid.
+ *               TMAN_FAIL_TASK_NOT_ADDED if task was not added 
+ *                                        to the framework
  * Side Effects:	 
  * Overview:     Register attributes (period, phase, deadline, 
  *               precedence constraints) for a task already added to 
@@ -187,16 +188,15 @@ int TMAN_TaskRegisterAttributes(char taskName[], char attribute[], char value[])
         }
     }
         
-    return TMAN_FAIL_TASK_NOT_CREATED;
+    return TMAN_FAIL_TASK_NOT_ADDED;
 
 }
 
 /********************************************************************
  * Function: 	TMAN_TaskWaitPeriod()
  * Precondition: 
- * Input: 		 tick_ms
- * Returns:      TMAN_SUCCESS if Ok.
- *               TMAN_FAIL error code in case of failure (see tman.h)
+ * Input: 		 
+ * Returns:      
  * Side Effects:	 
  * Overview:     Called by a task to signal the termination of an 
  *               instance and wait for the next activation.
@@ -212,18 +212,16 @@ int TMAN_TaskWaitPeriod(char * pvParameters){
         
         if (strcmp(tman_task_list[i].NAME, pvParameters) == 0) {
 
-            // If it does precedence
             if (tman_task_list[i].NUM_ACTIVATIONS > 0) {
 
+                // If it does precedence
                 if (tman_task_list[i].IS_PRECEDENT == 1)
                     xSemaphoreGive(tman_task_list[i].SEMAPHORE);
                 
+                // If fails Deadline
                 if (tman_ticks - tman_task_list[i].LAST_ACTIVATION > tman_task_list[i].DEADLINE){
                     
-                    tman_task_list[i].DEALINE_MISSES++;
-                    
-                    
-                                     
+                    tman_task_list[i].DEADLINE_MISSES++;            
                 }
             }
             break;
@@ -242,10 +240,9 @@ int TMAN_TaskWaitPeriod(char * pvParameters){
             // If it has precedence
             if (tman_task_list[i].PRECEDENCE != NULL) {
                 // Has to take semaphore of the precedence_constraint task
-
                 for (int j = 0; j < ARRAY_SIZE; j++) {
-                    // if we found the task which is the precedence
 
+                    // if we found the task which is the precedence
                     if (strcmp(tman_task_list[i].PRECEDENCE, tman_task_list[j].NAME) == 0) {
                         xSemaphoreTake(tman_task_list[j].SEMAPHORE, portMAX_DELAY);
                         break;
@@ -253,8 +250,6 @@ int TMAN_TaskWaitPeriod(char * pvParameters){
                 }
             }
             
-            
-
             tman_task_list[i].NUM_ACTIVATIONS++;
 
             break;
@@ -266,7 +261,7 @@ int TMAN_TaskWaitPeriod(char * pvParameters){
 /********************************************************************
  * Function: 	TMAN_TaskStats()
  * Precondition: 
- * Input: 		
+ * Input: 		char taskName[]
  * Returns:      returns statistical information about a task. 
  * Side Effects:	 
  * Overview:     returns statistical information about a task.
@@ -282,7 +277,7 @@ int * TMAN_TaskStats(char taskName[]){
     for (int i = 0; i < ARRAY_SIZE; i++) {
         if (strcmp(tman_task_list[i].NAME, taskName) == 0) {
             ret[0] = tman_task_list[i].NUM_ACTIVATIONS;
-            ret[1] = tman_task_list[i].DEALINE_MISSES;
+            ret[1] = tman_task_list[i].DEADLINE_MISSES;
             return ret;
         }
     }

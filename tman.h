@@ -34,8 +34,7 @@
 #define TMAN_SUCCESS                     0
 #define TMAN_FAIL                       -1
 #define TMAN_FAIL_INVALID_ATTRIBUTE     -2
-#define TMAN_FAIL_TASK_ALREADY_CREATED  -3
-#define TMAN_FAIL_TASK_NOT_CREATED      -4
+#define TMAN_FAIL_TASK_NOT_ADDED        -3
 #define PRIORITY (tskIDLE_PRIORITY + 5)
 
 #define ARRAY_SIZE                      6
@@ -45,7 +44,7 @@ typedef struct task_tman {
     int PERIOD;
     int PHASE;
     int DEADLINE;
-    int DEALINE_MISSES;
+    int DEADLINE_MISSES;
     char PRECEDENCE[16];
     int NUM_ACTIVATIONS;
     int LAST_ACTIVATION;
